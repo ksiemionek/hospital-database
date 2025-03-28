@@ -14,6 +14,6 @@ Grupa: Z07
 docker compose up -d
 ```
 
-url=jdbc:postgresql://localhost:5432/szpital_z07
+url=postgresql://admin:password@localhost:5432/szpital_z07
 username=admin
 password=password
