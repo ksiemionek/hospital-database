@@ -17,3 +17,7 @@ docker compose up -d
 url=postgresql://admin:password@localhost:5432/szpital_z07
 username=admin
 password=password
+
+## Zbiór danych
+
+Dane do projektu pochodzą ze strony https://synthea.mitre.org/downloads, konkretnie zbiór `1K Sample Synthetic Patient Records, CSV | [mirror]: 9 MB`
