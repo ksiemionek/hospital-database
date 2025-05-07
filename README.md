@@ -33,7 +33,7 @@ chmod +x create_database.sh
 
 ## Uruchomienie aplikacji
 
-Aby uruchomić aplikację, najpierw nalezy zainstalować potrzebne biblioteki:
+Aby uruchomić aplikację, najpierw należy zainstalować potrzebne biblioteki:
 
 ```sh
 pip install streamlit pandas plotly psycopg2-binary
