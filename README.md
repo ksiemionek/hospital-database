@@ -39,7 +39,7 @@ Aby uruchomić aplikację, najpierw należy zainstalować potrzebne biblioteki:
 pip install streamlit pandas plotly psycopg2-binary
 ```
 
-Po udanym zainstalowaniu mozemy uruchomić aplikację.
+Po udanym zainstalowaniu możemy uruchomić aplikację.
 
 ```sh
 streamlit run app.py
