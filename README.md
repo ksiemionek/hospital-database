@@ -30,3 +30,17 @@ Po udanym uruchomieniu bazy danych w Dockerze należy uruchomić skrypt `create_
 chmod +x create_database.sh
 ./create_database.sh
 ```
+
+## Uruchomienie aplikacji
+
+Aby uruchomić aplikację, najpierw nalezy zainstalować potrzebne biblioteki:
+
+```sh
+pip install streamlit pandas plotly psycopg2-binary
+```
+
+Po udanym zainstalowaniu mozemy uruchomić aplikację.
+
+```sh
+streamlit run app.py
+```
