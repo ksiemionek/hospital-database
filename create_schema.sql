@@ -1,3 +1,4 @@
+--TABLES----------------------------------------------------------------------------------------------------------------
 CREATE TABLE PATIENTS (
     Id UUID NOT NULL PRIMARY KEY,
     BIRTHDATE DATE NOT NULL CHECK (BIRTHDATE <= CURRENT_DATE),
@@ -302,6 +303,7 @@ CREATE TABLE DEVICES (
     UDI VARCHAR(255) NOT NULL
 );
 
+--FOREIGN KEYS----------------------------------------------------------------------------------------------------------
 ALTER TABLE PAYER_TRANSITIONS
     ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENT) REFERENCES PATIENTS(Id) ON DELETE CASCADE,
     ADD CONSTRAINT fk_payer FOREIGN KEY (PAYER) REFERENCES PAYERS(Id) ON DELETE CASCADE,
@@ -373,6 +375,7 @@ ALTER TABLE DEVICES
     ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENT) REFERENCES PATIENTS(Id) ON DELETE CASCADE,
     ADD CONSTRAINT fk_encounter FOREIGN KEY (ENCOUNTER) REFERENCES ENCOUNTERS(Id) ON DELETE CASCADE;
 
+--INDEXES---------------------------------------------------------------------------------------------------------------
 CREATE INDEX idx_encounters_patient ON ENCOUNTERS(PATIENT);
 
 CREATE INDEX idx_observations_patient ON OBSERVATIONS(PATIENT);
