@@ -376,3 +376,9 @@ ALTER TABLE DEVICES
 CREATE INDEX idx_encounters_patient ON ENCOUNTERS(PATIENT);
 
 CREATE INDEX idx_observations_patient ON OBSERVATIONS(PATIENT);
+
+CREATE INDEX idx_conditions_patient ON CONDITIONS(PATIENT);
+
+CREATE INDEX idx_medications_patient ON MEDICATIONS(PATIENT);
+
+CREATE INDEX idx_procedures_patient ON PROCEDURES(PATIENT);
