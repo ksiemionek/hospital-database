@@ -382,3 +382,5 @@ CREATE INDEX idx_conditions_patient ON CONDITIONS(PATIENT);
 CREATE INDEX idx_medications_patient ON MEDICATIONS(PATIENT);
 
 CREATE INDEX idx_procedures_patient ON PROCEDURES(PATIENT);
+
+CREATE INDEX idx_patient_birthdate ON PATIENTS(BIRTHDATE);
