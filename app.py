@@ -25,7 +25,11 @@ def query_db(sql):
 
 st.set_page_config(layout="wide", page_title="Szpital")
 
-st.header("Demografia pacjentów")
+# ===========================================================
+#                         STATYSTYKI
+# ===========================================================
+st.header("STATYSTYKI")
+st.subheader("Demografia pacjentów")
 col1, col2 = st.columns(2)
 with col1:
     gender = query_db("SELECT gender, COUNT(*) AS count FROM patients GROUP BY gender")
@@ -43,8 +47,7 @@ st.map(locations, zoom=6)
 # ===========================================================
 #                         PACJENCI
 # ===========================================================
-st.header("Pacjenci")
-
+st.header("PACJENCI")
 # -----------------------------------------------
 #                Dodawanie pacjentów
 # -----------------------------------------------
@@ -114,7 +117,7 @@ if st.button("Wyświetl pacjentów", on_click=toggle_show_patients):
     pass
 
 if st.session_state.show_patients_list:
-    patients_df = query_db("SELECT ssn, first, last FROM patients ORDER BY last, first")
+    patients_df = query_db("SELECT ssn as SSN, last as Nazwisko, first as Imię FROM patients ORDER BY last, first")
 
     if patients_df.empty:
         st.info("Brak pacjentów.")
