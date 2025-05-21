@@ -44,6 +44,22 @@ st.subheader("Mapa lokalizacji pacjentów")
 locations = query_db("SELECT lat, lon FROM patients WHERE lat IS NOT NULL AND lon IS NOT NULL")
 st.map(locations, zoom=6)
 
+st.subheader("Najczęstsze diagnozy pacjentów")
+conditions = query_db("""
+    SELECT description, COUNT(*) AS count
+    FROM conditions
+    WHERE description LIKE '%(disorder)'
+    GROUP BY description
+    ORDER BY count DESC
+    LIMIT 20
+""")
+if conditions.empty:
+    st.info("Brak diagnoz.")
+else:
+    fig = px.bar(conditions, x="description", y="count",
+                 title="Diagnozy", labels={"count": "Liczba przypadków", "description": "Diagnoza"})
+    st.plotly_chart(fig, use_container_width=True)
+
 # ===========================================================
 #                         PACJENCI
 # ===========================================================
