@@ -40,8 +40,14 @@ st.subheader("Mapa lokalizacji pacjentów")
 locations = query_db("SELECT lat, lon FROM patients WHERE lat IS NOT NULL AND lon IS NOT NULL")
 st.map(locations, zoom=6)
 
-# ========================== PACJENCI ==========================
-st.subheader("Pacjenci")
+# ===========================================================
+#                         PACJENCI
+# ===========================================================
+st.header("Pacjenci")
+
+# -----------------------------------------------
+#                Dodawanie pacjentów
+# -----------------------------------------------
 
 if "show_add_patient" not in st.session_state:
     st.session_state.show_add_patient = False
@@ -94,3 +100,24 @@ if st.session_state.show_add_patient:
                     st.session_state.show_add_patient = False
                 except Exception as e:
                     st.error(f"Wystąpił błąd!\n{e}")
+
+# -----------------------------------------------
+#              Wyświetlanie pacjentów
+# -----------------------------------------------
+
+if "show_patients_list" not in st.session_state:
+    st.session_state.show_patients_list = False
+def toggle_show_patients():
+    st.session_state.show_patients_list = not st.session_state.show_patients_list
+
+if st.button("Wyświetl pacjentów", on_click=toggle_show_patients):
+    pass
+
+if st.session_state.show_patients_list:
+    patients_df = query_db("SELECT ssn, first, last FROM patients ORDER BY last, first")
+
+    if patients_df.empty:
+        st.info("Brak pacjentów.")
+    else:
+        st.write("### Lista pacjentów:")
+        st.dataframe(patients_df, use_container_width=True)
