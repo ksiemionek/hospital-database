@@ -158,3 +158,39 @@ if st.session_state.show_patients_list:
                 st.write("**Rasa:**", details.at[0, "race"])
                 st.write("**Etniczność:**", details.at[0, "ethnicity"])
                 st.write("**Lokalizacja:**", f"{details.at[0, 'lat']}, {details.at[0, 'lon']}")
+
+# ===========================================================
+#                         ZAPASY
+# ===========================================================
+st.header("MAGAZYN SZPITALA")
+
+# -----------------------------------------------
+#              Wyświetlanie leków
+# -----------------------------------------------
+
+if "show_medications" not in st.session_state:
+    st.session_state.show_medications = False
+def toggle_medications():
+    st.session_state.show_medications = not st.session_state.show_medications
+
+if st.button("Pokaż / Ukryj leki", on_click=toggle_medications):
+    pass
+
+if st.session_state.show_medications:
+    st.subheader("Dostępne leki")
+
+    medications_summary = query_db("""
+        SELECT description, SUM(dispenses) AS total_dispenses
+        FROM medications
+        GROUP BY description
+        ORDER BY total_dispenses DESC
+    """)
+
+    if medications_summary.empty:
+        st.info("Brak danych.")
+    else:
+        meds_display = medications_summary.rename(columns={
+            "description": "Nazwa leku",
+            "total_dispenses": "Łączna liczba dawek",
+        })
+        st.dataframe(meds_display, use_container_width=True)
