@@ -70,8 +70,11 @@ st.header("PACJENCI")
 
 if "show_add_patient" not in st.session_state:
     st.session_state.show_add_patient = False
+
+
 def toggle_add_patient():
     st.session_state.show_add_patient = not st.session_state.show_add_patient
+
 
 st.button("Dodaj pacjenta", on_click=toggle_add_patient)
 
@@ -126,8 +129,11 @@ if st.session_state.show_add_patient:
 
 if "show_patients_list" not in st.session_state:
     st.session_state.show_patients_list = False
+
+
 def toggle_show_patients():
     st.session_state.show_patients_list = not st.session_state.show_patients_list
+
 
 if st.button("Wyświetl pacjentów", on_click=toggle_show_patients):
     pass
@@ -204,8 +210,11 @@ st.header("MAGAZYN SZPITALA")
 
 if "show_medications" not in st.session_state:
     st.session_state.show_medications = False
+
+
 def toggle_medications():
     st.session_state.show_medications = not st.session_state.show_medications
+
 
 if st.button("Wyświetl zapasy leków", on_click=toggle_medications):
     pass
@@ -214,10 +223,9 @@ if st.session_state.show_medications:
     st.subheader("Dostępne leki")
 
     medications_summary = query_db("""
-        SELECT description, SUM(dispenses) AS total_dispenses
-        FROM medications
-        GROUP BY description
-        ORDER BY total_dispenses DESC
+        SELECT * FROM medication_summary 
+        ORDER BY total_dispenses DESC 
+        LIMIT 20
     """)
 
     if medications_summary.empty:
@@ -235,8 +243,10 @@ if st.session_state.show_medications:
 if "show_supplies" not in st.session_state:
     st.session_state.show_supplies = False
 
+
 def toggle_supplies():
     st.session_state.show_supplies = not st.session_state.show_supplies
+
 
 if st.button("Wyświetl materiały medyczne", on_click=toggle_supplies):
     pass
@@ -245,10 +255,8 @@ if st.session_state.show_supplies:
     st.header("Dostępne materiały medyczne")
 
     supplies_summary = query_db("""
-        SELECT description, SUM(quantity) AS total_quantity
-        FROM supplies
-        GROUP BY description
-        ORDER BY total_quantity DESC
+        SELECT * FROM supply_summary 
+        ORDER BY total_quantity DESC 
         LIMIT 20
     """)
 
