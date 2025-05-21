@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import psycopg2
+import uuid
+from datetime import date
 
 
 DB_PARAMS = {
@@ -37,3 +39,39 @@ with col2:
 st.subheader("Mapa lokalizacji pacjentów")
 locations = query_db("SELECT lat, lon FROM patients WHERE lat IS NOT NULL AND lon IS NOT NULL")
 st.map(locations, zoom=6)
+
+st.subheader("Dodaj nowego pacjenta")
+
+with st.form("add_patient"):
+    first_name = st.text_input("Imię", max_chars=30)
+    last_name = st.text_input("Nazwisko", max_chars=30)
+    gender = st.selectbox("Płeć", {"Kobieta": "F", "Mężczyzna": "M"})
+    race = st.text_input("Rasa", max_chars=10)
+    ethnicity = st.text_input("Etniczność", max_chars=20)
+    birthdate = st.date_input("Data urodzenia", max_value=date.today())
+    ssn = st.text_input("Numer SSN", max_chars=11)
+    lat = st.number_input("Szerokość geograficzna", format="%.6f", step=0.000001)
+    lon = st.number_input("Długość geograficzna", format="%.6f", step=0.000001)
+    submitted = st.form_submit_button("Dodaj pacjenta")
+
+    if submitted:
+            if not all([first_name, last_name, race, ethnicity, ssn]):
+                st.warning("Proszę uzupełnić wszystkie dane pacjenta! >:(")
+            else:
+                conn = psycopg2.connect(**DB_PARAMS)
+                cur = conn.cursor()
+                cur.execute("""
+                    INSERT INTO patients (
+                        id, birthdate, ssn, first, last,
+                        gender, race, ethnicity, lat, lon
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    str(uuid.uuid4()), birthdate, ssn, first_name, last_name,
+                    gender, race, ethnicity,
+                    lat if lat != 0 else None, lon if lon != 0 else None
+                ))
+                conn.commit()
+                cur.close()
+                conn.close()
+                st.success("Pacjent został dodany.")
