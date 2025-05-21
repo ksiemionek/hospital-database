@@ -40,13 +40,13 @@ st.subheader("Mapa lokalizacji pacjentów")
 locations = query_db("SELECT lat, lon FROM patients WHERE lat IS NOT NULL AND lon IS NOT NULL")
 st.map(locations, zoom=6)
 
+# ========================== PACJENCI ==========================
+st.subheader("Pacjenci")
+
 if "show_add_patient" not in st.session_state:
     st.session_state.show_add_patient = False
-
 def toggle_add_patient():
     st.session_state.show_add_patient = not st.session_state.show_add_patient
-
-st.subheader("Dodaj nowego pacjenta")
 
 st.button("Dodaj pacjenta", on_click=toggle_add_patient)
 
@@ -71,7 +71,7 @@ if st.session_state.show_add_patient:
 
         if submitted:
             if not all([first_name, last_name, race, ethnicity, ssn]):
-                st.warning("Proszę uzupełnić wszystkie dane pacjenta! >:(")
+                st.warning("Proszę uzupełnić wszystkie dane pacjenta!")
             else:
                 try:
                     conn = psycopg2.connect(**DB_PARAMS)
@@ -93,4 +93,4 @@ if st.session_state.show_add_patient:
                     st.success("Pacjent został dodany.")
                     st.session_state.show_add_patient = False
                 except Exception as e:
-                    st.error(f"Wystąpił błąd! :(\n{e}")
+                    st.error(f"Wystąpił błąd!\n{e}")
