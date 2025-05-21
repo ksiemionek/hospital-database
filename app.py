@@ -174,6 +174,25 @@ if st.session_state.show_patients_list:
                     for desc in diagnoses['description']:
                         st.write(f"- {desc}")
 
+                medications = query_db(f"""
+                            SELECT description, start, stop, dispenses
+                            FROM medications
+                            WHERE patient = '{row['id']}'
+                            ORDER BY start DESC
+                            LIMIT 10
+                        """)
+                if medications.empty:
+                    st.write("**Przypisane leki:** brak.")
+                else:
+                    st.write("**Przypisane leki:**")
+                    for _, med in medications.iterrows():
+                        start = med['start']
+                        stop = med['stop']
+                        start_str = start.strftime("%Y-%m-%d")
+                        stop_str = stop.strftime("%Y-%m-%d") if pd.notna(stop) else "..."
+
+                        st.write(f"- {med['description']} (od {start_str} do {stop_str} - {med['dispenses']} szt.)")
+
 # ===========================================================
 #                         ZAPASY
 # ===========================================================
