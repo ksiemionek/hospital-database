@@ -3,7 +3,7 @@ unzip -q data.zip
 rm data.zip
 
 # CREATE DATABASE
-docker cp create_schema.sql postgres:/tmp/create_schema.sql
+docker cp ./database/create_schema.sql postgres:/tmp/create_schema.sql
 docker exec -i postgres psql -U admin -d szpital_z07 -f /tmp/create_schema.sql
 
 # PATIENTS
@@ -40,7 +40,7 @@ docker exec -i postgres psql -U admin -d szpital_z07 -c "COPY SUPPLIES FROM '/tm
 
 # IMAGING_STUDIES
 docker cp ./csv/imaging_studies.csv postgres:/tmp/imaging_studies.csv
-docker cp fix_imaging_studies.sql postgres:/tmp/fix_imaging_studies.sql
+docker cp ./database/fix_imaging_studies.sql postgres:/tmp/fix_imaging_studies.sql
 docker exec -i postgres psql -U admin -d szpital_z07 -f /tmp/fix_imaging_studies.sql
 
 # IMMUNIZATIONS
@@ -65,7 +65,7 @@ docker exec -i postgres psql -U admin -d szpital_z07 -c "COPY CAREPLANS FROM '/t
 
 # CLAIMS
 docker cp ./csv/claims.csv postgres:/tmp/claims.csv
-docker cp fix_claims.sql postgres:/tmp/fix_claims.sql
+docker cp ./database/fix_claims.sql postgres:/tmp/fix_claims.sql
 docker exec -i postgres psql -U admin -d szpital_z07 -f /tmp/fix_claims.sql
 
 # CLAIMS_TRANSACTIONS
