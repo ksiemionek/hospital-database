@@ -45,7 +45,9 @@ st.subheader("Dodaj nowego pacjenta")
 with st.form("add_patient"):
     first_name = st.text_input("Imię", max_chars=30)
     last_name = st.text_input("Nazwisko", max_chars=30)
-    gender = st.selectbox("Płeć", {"Kobieta": "F", "Mężczyzna": "M"})
+    gender_options = {"Kobieta": "F", "Mężczyzna": "M"}
+    gender_display = st.selectbox("Płeć", options=list(gender_options.keys()))
+    gender = gender_options[gender_display]
     race = st.text_input("Rasa", max_chars=10)
     ethnicity = st.text_input("Etniczność", max_chars=20)
     birthdate = st.date_input(
