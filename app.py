@@ -117,10 +117,22 @@ if st.button("Wyświetl pacjentów", on_click=toggle_show_patients):
     pass
 
 if st.session_state.show_patients_list:
-    patients_df = query_db("SELECT ssn as SSN, last as Nazwisko, first as Imię FROM patients ORDER BY last, first")
+    patients_df = query_db("SELECT id, ssn, last, first FROM patients ORDER BY id")
 
     if patients_df.empty:
         st.info("Brak pacjentów.")
     else:
         st.write("### Lista pacjentów:")
-        st.dataframe(patients_df, use_container_width=True)
+
+        for index, row in patients_df.iterrows():
+            with st.expander(f"{row['last']} {row['first']} – {row['ssn']}"):
+                details = query_db(f"""
+                    SELECT birthdate, gender, race, ethnicity, lat, lon
+                    FROM patients
+                    WHERE id = '{row['id']}'
+                """)
+                st.write("**Data urodzenia:**", details.at[0, "birthdate"])
+                st.write("**Płeć:**", details.at[0, "gender"])
+                st.write("**Rasa:**", details.at[0, "race"])
+                st.write("**Etniczność:**", details.at[0, "ethnicity"])
+                st.write("**Lokalizacja:**", f"{details.at[0, 'lat']}, {details.at[0, 'lon']}")
