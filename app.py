@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 import psycopg2
 import uuid
-from datetime import date
+import datetime
 
 
 DB_PARAMS = {
@@ -48,7 +48,11 @@ with st.form("add_patient"):
     gender = st.selectbox("Płeć", {"Kobieta": "F", "Mężczyzna": "M"})
     race = st.text_input("Rasa", max_chars=10)
     ethnicity = st.text_input("Etniczność", max_chars=20)
-    birthdate = st.date_input("Data urodzenia", max_value=date.today())
+    birthdate = st.date_input(
+        "Data urodzenia",
+        min_value=datetime.date(1900, 1, 1),
+        max_value=date.today()
+    )
     ssn = st.text_input("Numer SSN", max_chars=11)
     lat = st.number_input("Szerokość geograficzna", format="%.6f", step=0.000001)
     lon = st.number_input("Długość geograficzna", format="%.6f", step=0.000001)
