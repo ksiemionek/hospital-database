@@ -159,6 +159,21 @@ if st.session_state.show_patients_list:
                 st.write("**Etniczność:**", details.at[0, "ethnicity"])
                 st.write("**Lokalizacja:**", f"{details.at[0, 'lat']}, {details.at[0, 'lon']}")
 
+                diagnoses = query_db(f"""
+                           SELECT description 
+                           FROM conditions
+                           WHERE patient = '{row['id']}' AND description LIKE '%(disorder)'
+                           ORDER BY start DESC
+                           LIMIT 10
+                       """)
+
+                if diagnoses.empty:
+                    st.write("**Diagnozy:** brak.")
+                else:
+                    st.write("**Diagnozy:**")
+                    for desc in diagnoses['description']:
+                        st.write(f"- {desc}")
+
 # ===========================================================
 #                         ZAPASY
 # ===========================================================
