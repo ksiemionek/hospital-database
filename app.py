@@ -118,19 +118,25 @@ if st.button("Wyświetl pacjentów", on_click=toggle_show_patients):
 
 if st.session_state.show_patients_list:
     patients_df = query_db("SELECT id, ssn, last, first FROM patients ORDER BY id")
+    patients_per_page = 50
+    total_pages = (len(patients_df) - 1) // patients_per_page + 1
 
     if patients_df.empty:
         st.info("Brak pacjentów.")
     else:
         st.write("### Lista pacjentów:")
+        page = st.number_input("Strona", min_value=1, max_value=total_pages, step=1, value=1)
+        start_idx = (page - 1) * patients_per_page
+        end_idx = start_idx + patients_per_page
 
-        for index, row in patients_df.iterrows():
-            with st.expander(f"{row['last']} {row['first']} – {row['ssn']}"):
+        for index, row in patients_df.iloc[start_idx:end_idx].iterrows():
+            with st.expander(f"SSN: {row['ssn']} - {row['last']} {row['first']}"):
                 details = query_db(f"""
-                    SELECT birthdate, gender, race, ethnicity, lat, lon
+                    SELECT birthdate, gender, race, ethnicity, lat, lon, ssn
                     FROM patients
                     WHERE id = '{row['id']}'
                 """)
+                st.write("**Numer SSN:**", details.at[0, "ssn"])
                 st.write("**Data urodzenia:**", details.at[0, "birthdate"])
                 st.write("**Płeć:**", details.at[0, "gender"])
                 st.write("**Rasa:**", details.at[0, "race"])
