@@ -173,7 +173,7 @@ if "show_medications" not in st.session_state:
 def toggle_medications():
     st.session_state.show_medications = not st.session_state.show_medications
 
-if st.button("Pokaż / Ukryj leki", on_click=toggle_medications):
+if st.button("Wyświetl zapasy leków", on_click=toggle_medications):
     pass
 
 if st.session_state.show_medications:
@@ -194,3 +194,35 @@ if st.session_state.show_medications:
             "total_dispenses": "Łączna liczba dawek",
         })
         st.dataframe(meds_display, use_container_width=True)
+
+# -----------------------------------------------
+#              Wyświetlanie zapasów
+# -----------------------------------------------
+if "show_supplies" not in st.session_state:
+    st.session_state.show_supplies = False
+
+def toggle_supplies():
+    st.session_state.show_supplies = not st.session_state.show_supplies
+
+if st.button("Wyświetl materiały medyczne", on_click=toggle_supplies):
+    pass
+
+if st.session_state.show_supplies:
+    st.header("Dostępne materiały medyczne")
+
+    supplies_summary = query_db("""
+        SELECT description, SUM(quantity) AS total_quantity
+        FROM supplies
+        GROUP BY description
+        ORDER BY total_quantity DESC
+        LIMIT 20
+    """)
+
+    if supplies_summary.empty:
+        st.info("Brak danych.")
+    else:
+        supplies_display = supplies_summary.rename(columns={
+            "description": "Nazwa materiału",
+            "total_quantity": "Łączna liczba"
+        })
+        st.dataframe(supplies_display, use_container_width=True)
