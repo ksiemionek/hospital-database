@@ -51,7 +51,7 @@ with st.form("add_patient"):
     birthdate = st.date_input(
         "Data urodzenia",
         min_value=datetime.date(1900, 1, 1),
-        max_value=date.today()
+        max_value=datetime.date.today()
     )
     ssn = st.text_input("Numer SSN", max_chars=11)
     lat = st.number_input("Szerokość geograficzna", format="%.6f", step=0.000001)
