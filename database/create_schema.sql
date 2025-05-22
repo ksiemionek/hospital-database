@@ -44,7 +44,8 @@ create table patients (
    lat                 decimal(11,8),
    lon                 decimal(11,8),
    healthcare_expenses decimal(15,4),
-   healthcare_coverage decimal(15,4)
+   healthcare_coverage decimal(15,4),
+   lastvisit           timestamp
 );
 
 create table payers (
@@ -307,7 +308,8 @@ create table claims (
    lastbilleddatep             timestamp,
    healthcareclaimtypeid1      int,
    healthcareclaimtypeid2      int,
-   totalamount                 numeric(12,2) default 0
+   totalamount                 numeric(12,2) default 0,
+   createdat                   timestamp
 );
 
 create table conditions (
@@ -327,6 +329,13 @@ create table devices (
    code        varchar(50) not null,
    description varchar(255) not null,
    udi         varchar(255) not null
+);
+
+create table patients_audit (
+   patientid uuid,
+   operation text,
+   deletedat timestamp default current_timestamp,
+   data      jsonb
 );
 
 --FOREIGN KEYS----------------------------------------------------------------------------------------------------------
