@@ -144,7 +144,7 @@ if st.session_state.show_patients_list:
         patients_df = query_db(f"""
                 SELECT id, ssn, last, first
                 FROM patients
-                WHERE ssn LIKE '%{search_term}%'
+                WHERE ssn ILIKE '%{search_term}%' OR last ILIKE '%{search_term}%' OR first ILIKE '%{search_term}%'
                 ORDER BY id
             """)
     else:
