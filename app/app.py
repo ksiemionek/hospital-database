@@ -139,7 +139,17 @@ if st.button("Wyświetl pacjentów", on_click=toggle_show_patients):
     pass
 
 if st.session_state.show_patients_list:
-    patients_df = query_db("SELECT id, ssn, last, first FROM patients ORDER BY id")
+    search_term = st.text_input("Wyszukaj pacjenta:").strip()
+    if search_term:
+        patients_df = query_db(f"""
+                SELECT id, ssn, last, first
+                FROM patients
+                WHERE ssn LIKE '%{search_term}%'
+                ORDER BY id
+            """)
+    else:
+        patients_df = query_db("SELECT id, ssn, last, first FROM patients ORDER BY id")
+
     patients_per_page = 50
     total_pages = (len(patients_df) - 1) // patients_per_page + 1
 
