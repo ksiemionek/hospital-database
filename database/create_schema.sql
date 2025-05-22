@@ -1,446 +1,594 @@
-DROP TABLE IF EXISTS CLAIMS_TRANSACTIONS;
-DROP TABLE IF EXISTS CLAIMS;
-DROP TABLE IF EXISTS ALLERGIES;
-DROP TABLE IF EXISTS CAREPLANS;
-DROP TABLE IF EXISTS CONDITIONS;
-DROP TABLE IF EXISTS DEVICES;
-DROP TABLE IF EXISTS IMMUNIZATIONS;
-DROP TABLE IF EXISTS IMAGING_STUDIES;
-DROP TABLE IF EXISTS MEDICATIONS;
-DROP TABLE IF EXISTS OBSERVATIONS;
-DROP TABLE IF EXISTS PROCEDURES;
-DROP TABLE IF EXISTS SUPPLIES;
-DROP TABLE IF EXISTS ENCOUNTERS;
-DROP TABLE IF EXISTS PROVIDERS;
-DROP TABLE IF EXISTS PAYER_TRANSITIONS;
-DROP TABLE IF EXISTS PATIENTS;
-DROP TABLE IF EXISTS PAYERS;
-DROP TABLE IF EXISTS ORGANIZATIONS;
+drop table if exists claims_transactions;
+drop table if exists claims;
+drop table if exists allergies;
+drop table if exists careplans;
+drop table if exists conditions;
+drop table if exists devices;
+drop table if exists immunizations;
+drop table if exists imaging_studies;
+drop table if exists medications;
+drop table if exists observations;
+drop table if exists procedures;
+drop table if exists supplies;
+drop table if exists encounters;
+drop table if exists providers;
+drop table if exists payer_transitions;
+drop table if exists patients;
+drop table if exists payers;
+drop table if exists organizations;
 
 --TABLES----------------------------------------------------------------------------------------------------------------
-CREATE TABLE PATIENTS (
-    Id UUID NOT NULL PRIMARY KEY,
-    BIRTHDATE DATE NOT NULL CHECK (BIRTHDATE <= CURRENT_DATE),
-    DEATHDATE DATE CHECK (DEATHDATE <= CURRENT_DATE),
-    SSN VARCHAR(11) NOT NULL,
-    DRIVERS VARCHAR(9),
-    PASSPORT VARCHAR(10),
-    PREFIX VARCHAR(4),
-    FIRST VARCHAR(30) NOT NULL,
-    LAST VARCHAR(30) NOT NULL,
-    SUFFIX VARCHAR(5),
-    MAIDEN VARCHAR(30),
-    MARTIAL CHAR(1),
-    RACE VARCHAR(10) NOT NULL ,
-    ETHNICITY VARCHAR(20) NOT NULL ,
-    GENDER CHAR(1) CHECK (GENDER IN ('M', 'F')),
-    BIRTHPLACE VARCHAR(100),
-    ADDRESS VARCHAR(100),
-    CITY VARCHAR(50),
-    STATE VARCHAR(30),
-    COUNTY VARCHAR(30),
-    ZIP VARCHAR(15),
-    LAT DECIMAL(11,8),
-    LON DECIMAL(11,8),
-    HEALTHCARE_EXPENSES DECIMAL(15,4),
-    HEALTHCARE_COVERAGE DECIMAL(15,4)
+create table patients (
+   id                  uuid not null primary key,
+   birthdate           date not null check ( birthdate <= current_date ),
+   deathdate           date check ( deathdate <= current_date ),
+   ssn                 varchar(11) not null,
+   drivers             varchar(9),
+   passport            varchar(10),
+   prefix              varchar(4),
+   first               varchar(30) not null,
+   last                varchar(30) not null,
+   suffix              varchar(5),
+   maiden              varchar(30),
+   martial             char(1),
+   race                varchar(10) not null,
+   ethnicity           varchar(20) not null,
+   gender              char(1) check ( gender in ( 'M',
+                                      'F' ) ),
+   birthplace          varchar(100),
+   address             varchar(100),
+   city                varchar(50),
+   state               varchar(30),
+   county              varchar(30),
+   zip                 varchar(15),
+   lat                 decimal(11,8),
+   lon                 decimal(11,8),
+   healthcare_expenses decimal(15,4),
+   healthcare_coverage decimal(15,4)
 );
 
-CREATE TABLE PAYERS (
-    Id UUID NOT NULL PRIMARY KEY,
-    NAME VARCHAR(50) NOT NULL,
-    ADDRESS VARCHAR(100),
-    CITY VARCHAR(50),
-    STATE_HEADQUARTERED VARCHAR(5),
-    ZIP VARCHAR(15),
-    PHONE VARCHAR(14),
-    AMOUNT_COVERED NUMERIC(15,2),
-    AMOUNT_UNCOVERED NUMERIC(15,2),
-    REVENUE NUMERIC(15,2),
-    COVERED_ENCOUNTERS INT,
-    UNCOVERED_ENCOUNTERS INT,
-    COVERED_MEDICATIONS INT,
-    UNCOVERED_MEDICATIONS INT,
-    COVERED_PROCEDURES INT,
-    UNCOVERED_PROCEDURES INT,
-    COVERED_IMMUNIZATIONS INT,
-    UNCOVERED_IMMUNIZATIONS INT,
-    UNIQUE_CUSTOMERS INT,
-    QOLS_AVG NUMERIC(15,14),
-    MEMBER_MONTHS INT
+create table payers (
+   id                      uuid not null primary key,
+   name                    varchar(50) not null,
+   address                 varchar(100),
+   city                    varchar(50),
+   state_headquartered     varchar(5),
+   zip                     varchar(15),
+   phone                   varchar(14),
+   amount_covered          numeric(15,2),
+   amount_uncovered        numeric(15,2),
+   revenue                 numeric(15,2),
+   covered_encounters      int,
+   uncovered_encounters    int,
+   covered_medications     int,
+   uncovered_medications   int,
+   covered_procedures      int,
+   uncovered_procedures    int,
+   covered_immunizations   int,
+   uncovered_immunizations int,
+   unique_customers        int,
+   qols_avg                numeric(15,14),
+   member_months           int
 );
 
-ALTER TABLE PATIENTS ADD CONSTRAINT unique_ssn UNIQUE (SSN);
+alter table patients add constraint unique_ssn unique ( ssn );
 
-CREATE TABLE PAYER_TRANSITIONS (
-    PATIENT UUID NOT NULL,
-    MEMBERID UUID,
-    START_YEAR TIMESTAMPTZ,
-    END_YEAR TIMESTAMPTZ,
-    PAYER UUID NOT NULL,
-    SECONDARY_PAYER UUID,
-    OWNERSHIP VARCHAR(10),
-    OWNERNAME VARCHAR(100)
+create table payer_transitions (
+   patient         uuid not null,
+   memberid        uuid,
+   start_year      timestamptz,
+   end_year        timestamptz,
+   payer           uuid not null,
+   secondary_payer uuid,
+   ownership       varchar(10),
+   ownername       varchar(100)
 );
 
-CREATE TABLE PROCEDURES (
-    START TIMESTAMPTZ NOT NULL,
-    STOP TIMESTAMPTZ NOT NULL,
-    PATIENT UUID NOT NULL,
-    ENCOUNTER UUID NOT NULL,
-    CODE VARCHAR(50) NOT NULL,
-    DESCRIPTION VARCHAR(255) NOT NULL,
-    BASE_COST NUMERIC(10,2) NOT NULL,
-    REASONCODE VARCHAR(10),
-    REASONDESCRIPTION VARCHAR(255)
+create table procedures (
+   start             timestamptz not null,
+   stop              timestamptz not null,
+   patient           uuid not null,
+   encounter         uuid not null,
+   code              varchar(50) not null,
+   description       varchar(255) not null,
+   base_cost         numeric(10,2) not null,
+   reasoncode        varchar(10),
+   reasondescription varchar(255)
 );
 
-CREATE TABLE PROVIDERS (
-    Id UUID NOT NULL PRIMARY KEY,
-    ORGANIZATION UUID NOT NULL,
-    NAME VARCHAR(100) NOT NULL,
-    GENDER CHAR(1) CHECK (GENDER IN ('M', 'F')),
-    SPECIALITY VARCHAR(100) NOT NULL,
-    ADDRESS VARCHAR(100) NOT NULL,
-    CITY VARCHAR(50) NOT NULL,
-    STATE VARCHAR(20) NOT NULL,
-    ZIP VARCHAR(15) NOT NULL,
-    LAT DECIMAL(11, 8) NOT NULL,
-    LON DECIMAL(11, 8) NOT NULL,
-    UTILIZATION INT NOT NULL
+create table providers (
+   id           uuid not null primary key,
+   organization uuid not null,
+   name         varchar(100) not null,
+   gender       char(1) check ( gender in ( 'M',
+                                      'F' ) ),
+   speciality   varchar(100) not null,
+   address      varchar(100) not null,
+   city         varchar(50) not null,
+   state        varchar(20) not null,
+   zip          varchar(15) not null,
+   lat          decimal(11,8) not null,
+   lon          decimal(11,8) not null,
+   utilization  int not null
 );
 
-CREATE TABLE SUPPLIES (
-    DATE DATE NOT NULL,
-    PATIENT UUID NOT NULL,
-    ENCOUNTER UUID NOT NULL,
-    CODE VARCHAR(50) NOT NULL,
-    DESCRIPTION VARCHAR(255) NOT NULL,
-    QUANTITY INT NOT NULL
+create table supplies (
+   date        date not null,
+   patient     uuid not null,
+   encounter   uuid not null,
+   code        varchar(50) not null,
+   description varchar(255) not null,
+   quantity    int not null
 );
 
-CREATE TABLE ENCOUNTERS (
-    Id UUID PRIMARY KEY,
-    START TIMESTAMP NOT NULL,
-    STOP TIMESTAMP NOT NULL,
-    PATIENT UUID NOT NULL,
-    ORGANIZATION UUID NOT NULL,
-    PROVIDER UUID NOT NULL,
-    PAYER UUID NOT NULL,
-    ENCOUNTERCLASS VARCHAR(50) NOT NULL,
-    CODE VARCHAR(50) NOT NULL,
-    DESCRIPTION VARCHAR(255) NOT NULL,
-    BASE_ENCOUNTER_COST DECIMAL(10, 2) NOT NULL,
-    TOTAL_CLAIM_COST DECIMAL(10, 2) NOT NULL,
-    PAYER_COVERAGE DECIMAL(10, 2) NOT NULL,
-    REASONCODE VARCHAR(20),
-    REASONDESCRIPTION VARCHAR(255)
+create table encounters (
+   id                  uuid primary key,
+   start               timestamp not null,
+   stop                timestamp not null,
+   patient             uuid not null,
+   organization        uuid not null,
+   provider            uuid not null,
+   payer               uuid not null,
+   encounterclass      varchar(50) not null,
+   code                varchar(50) not null,
+   description         varchar(255) not null,
+   base_encounter_cost decimal(10,2) not null,
+   total_claim_cost    decimal(10,2) not null,
+   payer_coverage      decimal(10,2) not null,
+   reasoncode          varchar(20),
+   reasondescription   varchar(255)
 );
 
-CREATE TABLE IMAGING_STUDIES (
-    Id UUID PRIMARY KEY,
-    DATE TIMESTAMP NOT NULL,
-    PATIENT UUID NOT NULL,
-    ENCOUNTER UUID NOT NULL,
-    SERIES_UID VARCHAR(255) NOT NULL,
-    BODYSITE_CODE VARCHAR(12) NOT NULL,
-    BODYSITE_DESCRIPTION VARCHAR(255) NOT NULL,
-    MODALITY_CODE VARCHAR(5) NOT NULL,
-    MODALITY_DESCRIPTION VARCHAR(255) NOT NULL,
-    INSTANCE_UID VARCHAR(255) NOT NULL,
-    SOP_CODE VARCHAR(255) NOT NULL,
-    SOP_DESCRIPTION VARCHAR(255) NOT NULL,
-    PROCEDURE_CODE VARCHAR(20) NOT NULL
+create table imaging_studies (
+   id                   uuid primary key,
+   date                 timestamp not null,
+   patient              uuid not null,
+   encounter            uuid not null,
+   series_uid           varchar(255) not null,
+   bodysite_code        varchar(12) not null,
+   bodysite_description varchar(255) not null,
+   modality_code        varchar(5) not null,
+   modality_description varchar(255) not null,
+   instance_uid         varchar(255) not null,
+   sop_code             varchar(255) not null,
+   sop_description      varchar(255) not null,
+   procedure_code       varchar(20) not null
 );
 
-CREATE TABLE IMMUNIZATIONS (
-    DATE TIMESTAMP NOT NULL,
-    PATIENT UUID NOT NULL,
-    ENCOUNTER UUID NOT NULL,
-    CODE VARCHAR(5) NOT NULL,
-    DESCRIPTION VARCHAR(255) NOT NULL,
-    BASE_COST DECIMAL(10, 2) NOT NULL
+create table immunizations (
+   date        timestamp not null,
+   patient     uuid not null,
+   encounter   uuid not null,
+   code        varchar(5) not null,
+   description varchar(255) not null,
+   base_cost   decimal(10,2) not null
 );
 
-CREATE TABLE MEDICATIONS (
-    START TIMESTAMP NOT NULL,
-    STOP TIMESTAMP,
-    PATIENT UUID NOT NULL,
-    PAYER UUID NOT NULL,
-    ENCOUNTER UUID NOT NULL,
-    CODE VARCHAR(50) NOT NULL,
-    DESCRIPTION VARCHAR(255) NOT NULL,
-    BASE_COST DECIMAL(10, 2) NOT NULL,
-    PAYER_COVERAGE DECIMAL(10, 2),
-    DISPENSES INT NOT NULL,
-    TOTALCOST DECIMAL(10, 2) NOT NULL,
-    REASONCODE VARCHAR(255),
-    REASONDESCRIPTION VARCHAR(255)
+create table medications (
+   start             timestamp not null,
+   stop              timestamp,
+   patient           uuid not null,
+   payer             uuid not null,
+   encounter         uuid not null,
+   code              varchar(50) not null,
+   description       varchar(255) not null,
+   base_cost         decimal(10,2) not null,
+   payer_coverage    decimal(10,2),
+   dispenses         int not null,
+   totalcost         decimal(10,2) not null,
+   reasoncode        varchar(255),
+   reasondescription varchar(255)
 );
 
-CREATE TABLE OBSERVATIONS (
-    DATE TIMESTAMP NOT NULL,
-    PATIENT UUID NOT NULL,
-    ENCOUNTER UUID,
-    CATEGORY VARCHAR(255),
-    CODE VARCHAR(50),
-    DESCRIPTION VARCHAR(255),
-    VALUE VARCHAR(255),
-    UNITS VARCHAR(50),
-    TYPE VARCHAR(50)
+create table observations (
+   date        timestamp not null,
+   patient     uuid not null,
+   encounter   uuid,
+   category    varchar(255),
+   code        varchar(50),
+   description varchar(255),
+   value       varchar(255),
+   units       varchar(50),
+   type        varchar(50)
 );
 
-CREATE TABLE ORGANIZATIONS (
-    Id UUID PRIMARY KEY,
-    NAME VARCHAR(255) NOT NULL,
-    ADDRESS VARCHAR(255) NOT NULL,
-    CITY VARCHAR(100) NOT NULL,
-    STATE VARCHAR(2) NOT NULL,
-    ZIP VARCHAR(15) NOT NULL,
-    LAT DECIMAL(11, 8) NOT NULL,
-    LON DECIMAL(11, 8) NOT NULL,
-    PHONE VARCHAR(50),
-    REVENUE DECIMAL(10, 2) NOT NULL,
-    UTILIZATION INT NOT NULL
+create table organizations (
+   id          uuid primary key,
+   name        varchar(255) not null,
+   address     varchar(255) not null,
+   city        varchar(100) not null,
+   state       varchar(2) not null,
+   zip         varchar(15) not null,
+   lat         decimal(11,8) not null,
+   lon         decimal(11,8) not null,
+   phone       varchar(50),
+   revenue     decimal(10,2) not null,
+   utilization int not null
 );
 
-CREATE TABLE ALLERGIES (
-    START TIMESTAMP NOT NULL,
-    STOP TIMESTAMP,
-    PATIENT UUID NOT NULL,
-    ENCOUNTER UUID NOT NULL,
-    CODE VARCHAR(50) NOT NULL,
-    SYSTEM VARCHAR(50) NOT NULL,
-    DESCRIPTION VARCHAR(255) NOT NULL,
-    TYPE VARCHAR(50) NOT NULL,
-    CATEGORY VARCHAR(50) NOT NULL,
-    REACTION1 VARCHAR(50),
-    DESCRIPTION1 VARCHAR(255),
-    SEVERITY1 VARCHAR(50),
-    REACTION2 VARCHAR(50),
-    DESCRIPTION2 VARCHAR(255),
-    SEVERITY2 VARCHAR(50),
-    PRIMARY KEY (PATIENT, ENCOUNTER, CODE)
+create table allergies (
+   start        timestamp not null,
+   stop         timestamp,
+   patient      uuid not null,
+   encounter    uuid not null,
+   code         varchar(50) not null,
+   system       varchar(50) not null,
+   description  varchar(255) not null,
+   type         varchar(50) not null,
+   category     varchar(50) not null,
+   reaction1    varchar(50),
+   description1 varchar(255),
+   severity1    varchar(50),
+   reaction2    varchar(50),
+   description2 varchar(255),
+   severity2    varchar(50),
+   primary key ( patient,
+                 encounter,
+                 code )
 );
 
-CREATE TABLE CAREPLANS (
-    Id UUID PRIMARY KEY,
-    START TIMESTAMP NOT NULL,
-    STOP TIMESTAMP,
-    PATIENT UUID NOT NULL,
-    ENCOUNTER UUID NOT NULL,
-    CODE VARCHAR(50) NOT NULL,
-    DESCRIPTION VARCHAR(255) NOT NULL,
-    REASONCODE VARCHAR(50),
-    REASONDESCRIPTION VARCHAR(255)
+create table careplans (
+   id                uuid primary key,
+   start             timestamp not null,
+   stop              timestamp,
+   patient           uuid not null,
+   encounter         uuid not null,
+   code              varchar(50) not null,
+   description       varchar(255) not null,
+   reasoncode        varchar(50),
+   reasondescription varchar(255)
 );
 
-CREATE TABLE CLAIMS_TRANSACTIONS (
-    ID UUID PRIMARY KEY,
-    CLAIMID UUID NOT NULL,
-    CHARGEID INT NOT NULL,
-    PATIENTID UUID NOT NULL,
-    TYPE VARCHAR(50) NOT NULL,
-    AMOUNT DECIMAL(10, 2),
-    METHOD VARCHAR(50),
-    FROMDATE TIMESTAMP NOT NULL,
-    TODATE TIMESTAMP NOT NULL,
-    PLACEOFSERVICE UUID NOT NULL,
-    PROCEDURECODE VARCHAR(50),
-    MODIFIER1 VARCHAR(50),
-    MODIFIER2 VARCHAR(50),
-    DIAGNOSISREF1 INT,
-    DIAGNOSISREF2 INT,
-    DIAGNOSISREF3 INT,
-    DIAGNOSISREF4 INT,
-    UNITS INT,
-    DEPARTMENTID INT,
-    NOTES VARCHAR(255),
-    UNITAMOUNT DECIMAL(10, 2),
-    TRANSFEROUTID INT,
-    TRANSFERTYPE VARCHAR(50),
-    PAYMENTS DECIMAL(10, 2),
-    ADJUSTMENTS DECIMAL(10, 2),
-    TRANSFERS DECIMAL(10, 2),
-    OUTSTANDING DECIMAL(10, 2),
-    APPOINTMENTID UUID,
-    LINENOTE VARCHAR(255),
-    PATIENTINSURANCEID UUID,
-    FEESCHEDULEID INT,
-    PROVIDERID UUID,
-    SUPERVISINGPROVIDERID UUID
+create table claims_transactions (
+   id                    uuid primary key,
+   claimid               uuid not null,
+   chargeid              int not null,
+   patientid             uuid not null,
+   type                  varchar(50) not null,
+   amount                decimal(10,2),
+   method                varchar(50),
+   fromdate              timestamp not null,
+   todate                timestamp not null,
+   placeofservice        uuid not null,
+   procedurecode         varchar(50),
+   modifier1             varchar(50),
+   modifier2             varchar(50),
+   diagnosisref1         int,
+   diagnosisref2         int,
+   diagnosisref3         int,
+   diagnosisref4         int,
+   units                 int,
+   departmentid          int,
+   notes                 varchar(255),
+   unitamount            decimal(10,2),
+   transferoutid         int,
+   transfertype          varchar(50),
+   payments              decimal(10,2),
+   adjustments           decimal(10,2),
+   transfers             decimal(10,2),
+   outstanding           decimal(10,2),
+   appointmentid         uuid,
+   linenote              varchar(255),
+   patientinsuranceid    uuid,
+   feescheduleid         int,
+   providerid            uuid,
+   supervisingproviderid uuid
 );
 
-CREATE TABLE CLAIMS (
-    Id UUID PRIMARY KEY,
-    PATIENTID UUID NOT NULL,
-    PROVIDERID UUID NOT NULL,
-    PRIMARYPATIENTINSURANCEID UUID,
-    SECONDARYPATIENTINSURANCEID UUID,
-    DEPARTMENTID INT NOT NULL,
-    PATIENTDEPARTMENTID INT NOT NULL,
-    DIAGNOSIS1 VARCHAR(50),
-    DIAGNOSIS2 VARCHAR(50),
-    DIAGNOSIS3 VARCHAR(50),
-    DIAGNOSIS4 VARCHAR(50),
-    DIAGNOSIS5 VARCHAR(50),
-    DIAGNOSIS6 VARCHAR(50),
-    DIAGNOSIS7 VARCHAR(50),
-    DIAGNOSIS8 VARCHAR(50),
-    REFERRINGPROVIDERID VARCHAR(50),
-    APPOINTMENTID UUID NOT NULL,
-    CURRENTILLNESSDATE TIMESTAMP,
-    SERVICEDATE TIMESTAMP,
-    SUPERVISINGPROVIDERID UUID,
-    STATUS1 VARCHAR(50),
-    STATUS2 VARCHAR(50),
-    STATUSP VARCHAR(50),
-    OUTSTANDING1 DECIMAL(10, 2),
-    OUTSTANDING2 DECIMAL(10, 2),
-    OUTSTANDINGP DECIMAL(10, 2),
-    LASTBILLEDDATE1 TIMESTAMP,
-    LASTBILLEDDATE2 TIMESTAMP,
-    LASTBILLEDDATEP TIMESTAMP,
-    HEALTHCARECLAIMTYPEID1 INT,
-    HEALTHCARECLAIMTYPEID2 INT
+create table claims (
+   id                          uuid primary key,
+   patientid                   uuid not null,
+   providerid                  uuid not null,
+   primarypatientinsuranceid   uuid,
+   secondarypatientinsuranceid uuid,
+   departmentid                int not null,
+   patientdepartmentid         int not null,
+   diagnosis1                  varchar(50),
+   diagnosis2                  varchar(50),
+   diagnosis3                  varchar(50),
+   diagnosis4                  varchar(50),
+   diagnosis5                  varchar(50),
+   diagnosis6                  varchar(50),
+   diagnosis7                  varchar(50),
+   diagnosis8                  varchar(50),
+   referringproviderid         varchar(50),
+   appointmentid               uuid not null,
+   currentillnessdate          timestamp,
+   servicedate                 timestamp,
+   supervisingproviderid       uuid,
+   status1                     varchar(50),
+   status2                     varchar(50),
+   statusp                     varchar(50),
+   outstanding1                decimal(10,2),
+   outstanding2                decimal(10,2),
+   outstandingp                decimal(10,2),
+   lastbilleddate1             timestamp,
+   lastbilleddate2             timestamp,
+   lastbilleddatep             timestamp,
+   healthcareclaimtypeid1      int,
+   healthcareclaimtypeid2      int,
+   totalamount                 numeric(12,2) default 0
 );
 
-CREATE TABLE CONDITIONS (
-    START DATE NOT NULL,
-    STOP DATE,
-    PATIENT UUID NOT NULL,
-    ENCOUNTER UUID NOT NULL,
-    CODE VARCHAR(50) NOT NULL,
-    DESCRIPTION VARCHAR(255) NOT NULL
+create table conditions (
+   start       date not null,
+   stop        date,
+   patient     uuid not null,
+   encounter   uuid not null,
+   code        varchar(50) not null,
+   description varchar(255) not null
 );
 
-CREATE TABLE DEVICES (
-    START TIMESTAMP NOT NULL,
-    STOP TIMESTAMP,
-    PATIENT UUID NOT NULL,
-    ENCOUNTER UUID NOT NULL,
-    CODE VARCHAR(50) NOT NULL,
-    DESCRIPTION VARCHAR(255) NOT NULL,
-    UDI VARCHAR(255) NOT NULL
+create table devices (
+   start       timestamp not null,
+   stop        timestamp,
+   patient     uuid not null,
+   encounter   uuid not null,
+   code        varchar(50) not null,
+   description varchar(255) not null,
+   udi         varchar(255) not null
 );
 
 --FOREIGN KEYS----------------------------------------------------------------------------------------------------------
-ALTER TABLE PAYER_TRANSITIONS
-    ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENT) REFERENCES PATIENTS(Id) ON DELETE CASCADE;
-ALTER TABLE PAYER_TRANSITIONS
-    ADD CONSTRAINT fk_payer FOREIGN KEY (PAYER) REFERENCES PAYERS(Id) ON DELETE CASCADE;
-ALTER TABLE PAYER_TRANSITIONS
-    ADD CONSTRAINT fk_secondary_payer FOREIGN KEY (SECONDARY_PAYER) REFERENCES PAYERS(Id) ON DELETE CASCADE;
+alter table payer_transitions
+   add constraint fk_patient
+      foreign key ( patient )
+         references patients ( id )
+            on delete cascade;
+alter table payer_transitions
+   add constraint fk_payer
+      foreign key ( payer )
+         references payers ( id )
+            on delete cascade;
+alter table payer_transitions
+   add constraint fk_secondary_payer
+      foreign key ( secondary_payer )
+         references payers ( id )
+            on delete cascade;
 
-ALTER TABLE PROCEDURES
-    ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENT) REFERENCES PATIENTS(Id) ON DELETE CASCADE;
-ALTER TABLE PROCEDURES
-    ADD CONSTRAINT fk_encounter FOREIGN KEY (ENCOUNTER) REFERENCES ENCOUNTERS(Id) ON DELETE CASCADE;
+alter table procedures
+   add constraint fk_patient
+      foreign key ( patient )
+         references patients ( id )
+            on delete cascade;
+alter table procedures
+   add constraint fk_encounter
+      foreign key ( encounter )
+         references encounters ( id )
+            on delete cascade;
 
-ALTER TABLE PROVIDERS
-    ADD CONSTRAINT fk_organization FOREIGN KEY (ORGANIZATION) REFERENCES ORGANIZATIONS(Id) ON DELETE CASCADE;
+alter table providers
+   add constraint fk_organization
+      foreign key ( organization )
+         references organizations ( id )
+            on delete cascade;
 
-ALTER TABLE SUPPLIES
-    ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENT) REFERENCES PATIENTS(Id) ON DELETE CASCADE;
-ALTER TABLE SUPPLIES
-    ADD CONSTRAINT fk_encounter FOREIGN KEY (ENCOUNTER) REFERENCES ENCOUNTERS(Id) ON DELETE CASCADE;
+alter table supplies
+   add constraint fk_patient
+      foreign key ( patient )
+         references patients ( id )
+            on delete cascade;
+alter table supplies
+   add constraint fk_encounter
+      foreign key ( encounter )
+         references encounters ( id )
+            on delete cascade;
 
-ALTER TABLE ENCOUNTERS
-    ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENT) REFERENCES PATIENTS(Id) ON DELETE CASCADE;
-ALTER TABLE ENCOUNTERS
-    ADD CONSTRAINT fk_organization FOREIGN KEY (ORGANIZATION) REFERENCES ORGANIZATIONS(Id) ON DELETE CASCADE;
-ALTER TABLE ENCOUNTERS
-    ADD CONSTRAINT fk_provider FOREIGN KEY (PROVIDER) REFERENCES PROVIDERS(Id) ON DELETE CASCADE;
-ALTER TABLE ENCOUNTERS
-    ADD CONSTRAINT fk_payer FOREIGN KEY (PAYER) REFERENCES PAYERS(Id) ON DELETE CASCADE;
+alter table encounters
+   add constraint fk_patient
+      foreign key ( patient )
+         references patients ( id )
+            on delete cascade;
+alter table encounters
+   add constraint fk_organization
+      foreign key ( organization )
+         references organizations ( id )
+            on delete cascade;
+alter table encounters
+   add constraint fk_provider
+      foreign key ( provider )
+         references providers ( id )
+            on delete cascade;
+alter table encounters
+   add constraint fk_payer
+      foreign key ( payer )
+         references payers ( id )
+            on delete cascade;
 
 
-ALTER TABLE IMAGING_STUDIES
-    ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENT) REFERENCES PATIENTS(Id) ON DELETE CASCADE;
-ALTER TABLE IMAGING_STUDIES
-    ADD CONSTRAINT fk_encounter FOREIGN KEY (ENCOUNTER) REFERENCES ENCOUNTERS(Id) ON DELETE CASCADE;
+alter table imaging_studies
+   add constraint fk_patient
+      foreign key ( patient )
+         references patients ( id )
+            on delete cascade;
+alter table imaging_studies
+   add constraint fk_encounter
+      foreign key ( encounter )
+         references encounters ( id )
+            on delete cascade;
 
-ALTER TABLE IMMUNIZATIONS
-    ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENT) REFERENCES PATIENTS(Id) ON DELETE CASCADE;
-ALTER TABLE IMMUNIZATIONS
-    ADD CONSTRAINT fk_encounter FOREIGN KEY (ENCOUNTER) REFERENCES ENCOUNTERS(Id) ON DELETE CASCADE;
+alter table immunizations
+   add constraint fk_patient
+      foreign key ( patient )
+         references patients ( id )
+            on delete cascade;
+alter table immunizations
+   add constraint fk_encounter
+      foreign key ( encounter )
+         references encounters ( id )
+            on delete cascade;
 
-ALTER TABLE MEDICATIONS
-    ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENT) REFERENCES PATIENTS(Id) ON DELETE CASCADE;
-ALTER TABLE MEDICATIONS
-    ADD CONSTRAINT fk_payer FOREIGN KEY (PAYER) REFERENCES PAYERS(Id) ON DELETE CASCADE;
-ALTER TABLE MEDICATIONS
-    ADD CONSTRAINT fk_encounter FOREIGN KEY (ENCOUNTER) REFERENCES ENCOUNTERS(Id) ON DELETE CASCADE;
+alter table medications
+   add constraint fk_patient
+      foreign key ( patient )
+         references patients ( id )
+            on delete cascade;
+alter table medications
+   add constraint fk_payer
+      foreign key ( payer )
+         references payers ( id )
+            on delete cascade;
+alter table medications
+   add constraint fk_encounter
+      foreign key ( encounter )
+         references encounters ( id )
+            on delete cascade;
 
-ALTER TABLE OBSERVATIONS
-    ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENT) REFERENCES PATIENTS(Id) ON DELETE CASCADE;
-ALTER TABLE OBSERVATIONS
-    ADD CONSTRAINT fk_encounter FOREIGN KEY (ENCOUNTER) REFERENCES ENCOUNTERS(Id) ON DELETE CASCADE;
+alter table observations
+   add constraint fk_patient
+      foreign key ( patient )
+         references patients ( id )
+            on delete cascade;
+alter table observations
+   add constraint fk_encounter
+      foreign key ( encounter )
+         references encounters ( id )
+            on delete cascade;
 
-ALTER TABLE ALLERGIES
-    ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENT) REFERENCES PATIENTS(Id) ON DELETE CASCADE;
-ALTER TABLE ALLERGIES
-    ADD CONSTRAINT fk_encounter FOREIGN KEY (ENCOUNTER) REFERENCES ENCOUNTERS(Id) ON DELETE CASCADE;
+alter table allergies
+   add constraint fk_patient
+      foreign key ( patient )
+         references patients ( id )
+            on delete cascade;
+alter table allergies
+   add constraint fk_encounter
+      foreign key ( encounter )
+         references encounters ( id )
+            on delete cascade;
 
-ALTER TABLE CAREPLANS
-    ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENT) REFERENCES PATIENTS(Id) ON DELETE CASCADE;
-ALTER TABLE CAREPLANS
-    ADD CONSTRAINT fk_encounter FOREIGN KEY (ENCOUNTER) REFERENCES ENCOUNTERS(Id) ON DELETE CASCADE;
+alter table careplans
+   add constraint fk_patient
+      foreign key ( patient )
+         references patients ( id )
+            on delete cascade;
+alter table careplans
+   add constraint fk_encounter
+      foreign key ( encounter )
+         references encounters ( id )
+            on delete cascade;
 
-ALTER TABLE CLAIMS_TRANSACTIONS
-    ADD CONSTRAINT fk_claim FOREIGN KEY (CLAIMID) REFERENCES CLAIMS(Id) ON DELETE CASCADE;
-ALTER TABLE CLAIMS_TRANSACTIONS
-    ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENTID) REFERENCES PATIENTS(Id) ON DELETE CASCADE;
-ALTER TABLE CLAIMS_TRANSACTIONS
-    ADD CONSTRAINT fk_place_of_service FOREIGN KEY (PLACEOFSERVICE) REFERENCES ORGANIZATIONS(Id) ON DELETE CASCADE;
-ALTER TABLE CLAIMS_TRANSACTIONS
-    ADD CONSTRAINT fk_appointment FOREIGN KEY (APPOINTMENTID) REFERENCES ENCOUNTERS(Id) ON DELETE CASCADE;
-ALTER TABLE CLAIMS_TRANSACTIONS
-    ADD CONSTRAINT fk_provider FOREIGN KEY (PROVIDERID) REFERENCES PROVIDERS(Id) ON DELETE CASCADE;
-ALTER TABLE CLAIMS_TRANSACTIONS
-    ADD CONSTRAINT fk_supervising_provider FOREIGN KEY (SUPERVISINGPROVIDERID) REFERENCES PROVIDERS(Id) ON DELETE CASCADE;
+alter table claims_transactions
+   add constraint fk_claim
+      foreign key ( claimid )
+         references claims ( id )
+            on delete cascade;
+alter table claims_transactions
+   add constraint fk_patient
+      foreign key ( patientid )
+         references patients ( id )
+            on delete cascade;
+alter table claims_transactions
+   add constraint fk_place_of_service
+      foreign key ( placeofservice )
+         references organizations ( id )
+            on delete cascade;
+alter table claims_transactions
+   add constraint fk_appointment
+      foreign key ( appointmentid )
+         references encounters ( id )
+            on delete cascade;
+alter table claims_transactions
+   add constraint fk_provider
+      foreign key ( providerid )
+         references providers ( id )
+            on delete cascade;
+alter table claims_transactions
+   add constraint fk_supervising_provider
+      foreign key ( supervisingproviderid )
+         references providers ( id )
+            on delete cascade;
 
-ALTER TABLE CLAIMS
-    ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENTID) REFERENCES PATIENTS(Id) ON DELETE CASCADE;
-ALTER TABLE CLAIMS
-    ADD CONSTRAINT fk_provider FOREIGN KEY (PROVIDERID) REFERENCES PROVIDERS(Id) ON DELETE CASCADE;
-ALTER TABLE CLAIMS
-    ADD CONSTRAINT fk_primary_insurance FOREIGN KEY (PRIMARYPATIENTINSURANCEID) REFERENCES PAYERS(Id) ON DELETE CASCADE;
-ALTER TABLE CLAIMS
-    ADD CONSTRAINT fk_secondary_insurance FOREIGN KEY (SECONDARYPATIENTINSURANCEID) REFERENCES PAYERS(Id) ON DELETE CASCADE;
-ALTER TABLE CLAIMS
-    ADD CONSTRAINT fk_appointment FOREIGN KEY (APPOINTMENTID) REFERENCES ENCOUNTERS(Id) ON DELETE CASCADE;
-ALTER TABLE CLAIMS
-    ADD CONSTRAINT fk_supervising_provider FOREIGN KEY (SUPERVISINGPROVIDERID) REFERENCES PROVIDERS(Id) ON DELETE CASCADE;
+alter table claims
+   add constraint fk_patient
+      foreign key ( patientid )
+         references patients ( id )
+            on delete cascade;
+alter table claims
+   add constraint fk_provider
+      foreign key ( providerid )
+         references providers ( id )
+            on delete cascade;
+alter table claims
+   add constraint fk_primary_insurance
+      foreign key ( primarypatientinsuranceid )
+         references payers ( id )
+            on delete cascade;
+alter table claims
+   add constraint fk_secondary_insurance
+      foreign key ( secondarypatientinsuranceid )
+         references payers ( id )
+            on delete cascade;
+alter table claims
+   add constraint fk_appointment
+      foreign key ( appointmentid )
+         references encounters ( id )
+            on delete cascade;
+alter table claims
+   add constraint fk_supervising_provider
+      foreign key ( supervisingproviderid )
+         references providers ( id )
+            on delete cascade;
 
-ALTER TABLE CONDITIONS
-    ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENT) REFERENCES PATIENTS(Id) ON DELETE CASCADE;
-ALTER TABLE CONDITIONS
-    ADD CONSTRAINT fk_encounter FOREIGN KEY (ENCOUNTER) REFERENCES ENCOUNTERS(Id) ON DELETE CASCADE;
+alter table conditions
+   add constraint fk_patient
+      foreign key ( patient )
+         references patients ( id )
+            on delete cascade;
+alter table conditions
+   add constraint fk_encounter
+      foreign key ( encounter )
+         references encounters ( id )
+            on delete cascade;
 
-ALTER TABLE DEVICES
-    ADD CONSTRAINT fk_patient FOREIGN KEY (PATIENT) REFERENCES PATIENTS(Id) ON DELETE CASCADE;
-ALTER TABLE DEVICES
-    ADD CONSTRAINT fk_encounter FOREIGN KEY (ENCOUNTER) REFERENCES ENCOUNTERS(Id) ON DELETE CASCADE;
+alter table devices
+   add constraint fk_patient
+      foreign key ( patient )
+         references patients ( id )
+            on delete cascade;
+alter table devices
+   add constraint fk_encounter
+      foreign key ( encounter )
+         references encounters ( id )
+            on delete cascade;
 
 --INDEXES---------------------------------------------------------------------------------------------------------------
-CREATE INDEX idx_payer_transitions_patient ON PAYER_TRANSITIONS(PATIENT);
-CREATE INDEX idx_payer_transitions_payer ON PAYER_TRANSITIONS(PAYER);
+create index idx_payer_transitions_patient on
+   payer_transitions (
+      patient
+   );
+create index idx_payer_transitions_payer on
+   payer_transitions (
+      payer
+   );
 
-CREATE INDEX idx_encounters_patient ON ENCOUNTERS(PATIENT);
-CREATE INDEX idx_encounters_payer ON ENCOUNTERS(PAYER);
+create index idx_encounters_patient on
+   encounters (
+      patient
+   );
+create index idx_encounters_payer on
+   encounters (
+      payer
+   );
 
-CREATE INDEX idx_procedures_encounter ON PROCEDURES(ENCOUNTER);
-CREATE INDEX idx_medications_payer ON MEDICATIONS(PAYER);
+create index idx_procedures_encounter on
+   procedures (
+      encounter
+   );
+create index idx_medications_payer on
+   medications (
+      payer
+   );
 
 --VIEWS-----------------------------------------------------------------------------------------------------------------
-CREATE OR REPLACE VIEW medication_summary AS
-SELECT description, SUM(dispenses) AS total_dispenses
-FROM medications
-GROUP BY description;
+create or replace view medication_summary as
+   select description,
+          sum(dispenses) as total_dispenses
+     from medications
+    group by description;
 
-CREATE OR REPLACE VIEW supply_summary AS
-SELECT description, SUM(quantity) AS total_quantity
-FROM supplies
-GROUP BY description
-ORDER BY total_quantity DESC;
+create or replace view supply_summary as
+   select description,
+          sum(quantity) as total_quantity
+     from supplies
+    group by description
+    order by total_quantity desc;
