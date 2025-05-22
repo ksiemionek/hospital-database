@@ -199,6 +199,23 @@ if st.session_state.show_patients_list:
 
                         st.write(f"- {med['description']} (od {start_str} do {stop_str} - {med['dispenses']} szt.)")
 
+                encounters = query_db(f"""
+                    SELECT start, stop, encounterclass, description, total_claim_cost
+                    FROM encounters
+                    WHERE patient = '{row['id']}'
+                    ORDER BY start DESC
+                    LIMIT 10
+                """)
+
+                if encounters.empty:
+                    st.write("**Pobyty w szpitalu:** brak.")
+                else:
+                    st.write("**Pobyty w szpitalu:**")
+                    for _, enc in encounters.iterrows():
+                        start_str = enc['start'].strftime("%Y-%m-%d %H:%M")
+                        stop_str = enc['stop'].strftime("%Y-%m-%d %H:%M")
+                        st.write(f"- {enc['description']} ({enc['encounterclass']}) od {start_str} do {stop_str} — koszt pobytu: {enc['total_claim_cost']} USD")
+
 # ===========================================================
 #                         ZAPASY
 # ===========================================================
@@ -268,3 +285,4 @@ if st.session_state.show_supplies:
             "total_quantity": "Łączna liczba"
         })
         st.dataframe(supplies_display, use_container_width=True)
+
