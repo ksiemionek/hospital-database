@@ -80,4 +80,8 @@ docker exec -i postgres psql -U admin -d szpital_z07 -c "COPY CONDITIONS FROM '/
 docker cp ./csv/devices.csv postgres:/tmp/devices.csv
 docker exec -i postgres psql -U admin -d szpital_z07 -c "COPY DEVICES FROM '/tmp/devices.csv' DELIMITER ',' CSV HEADER;"
 
+# TRIGGERS
+docker cp ./database/triggers.sql postgres:/tmp/triggers.sql
+docker exec -i postgres psql -U admin -d szpital_z07 -f /tmp/triggers.sql
+
 rm -rf ./csv
