@@ -9,6 +9,9 @@ DROP TRIGGER IF EXISTS trg_prevent_duplicate_immunization ON immunizations;
 DROP TRIGGER IF EXISTS trg_validate_encounter_dates ON encounters;
 DROP TRIGGER IF EXISTS trg_increment_patient_procedure_count ON procedures;
 
+
+-- DELETION AUDIT --
+
 -- Saves deleted row from patiants to patients_audit as JSONB
 CREATE OR REPLACE FUNCTION patients_delete_audit_fn() RETURNS TRIGGER AS $$
 BEGIN
@@ -49,6 +52,98 @@ AFTER INSERT ON patients_audit
 FOR EACH ROW
 EXECUTE FUNCTION patients_audit_cleanup_fn();
 
+
+-- VALIDATION --
+
+-- Forbids repeated registration of the same vaccine on a given day for a given patient
+CREATE OR REPLACE FUNCTION prevent_duplicate_immunization()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM immunizations
+        WHERE patient = NEW.patient
+          AND code = NEW.code
+          AND DATE(date) = DATE(NEW.date)
+    ) THEN
+        RAISE EXCEPTION 'The patient (ID=%) has already received the immunization with code % on the same day (%).',
+            NEW.patient, NEW.code, NEW.date;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_prevent_duplicate_immunization
+BEFORE INSERT ON immunizations
+FOR EACH ROW
+EXECUTE FUNCTION prevent_duplicate_immunization();
+
+
+-- Forbids changing medications for a dead patient
+CREATE OR REPLACE FUNCTION prevent_med_after_death()
+RETURNS TRIGGER AS $$
+DECLARE
+    death_date DATE;
+BEGIN
+    SELECT DEATHDATE INTO death_date
+    FROM PATIENTS
+    WHERE ID = NEW.PATIENT;
+
+    IF death_date IS NOT NULL AND death_date <= CURRENT_DATE THEN
+        RAISE EXCEPTION 'Cannot asign medication to a dead patient (ID=%, date of death=%).', NEW.PATIENT, death_date;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_prevent_med_after_death
+BEFORE INSERT OR UPDATE ON MEDICATIONS
+FOR EACH ROW
+EXECUTE FUNCTION prevent_med_after_death();
+
+
+-- Checks if start date is earlier than end date in encounters, otherwise raises exception
+CREATE OR REPLACE FUNCTION validate_encounter_dates()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.start IS NOT NULL
+       AND NEW.end IS NOT NULL
+       AND NEW.end < NEW.start THEN
+        RAISE EXCEPTION 'End date (%s) cannot be earlier than start date (%s).',
+                        NEW.end, NEW.start;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_validate_encounter_dates
+BEFORE INSERT OR UPDATE ON encounters
+FOR EACH ROW
+EXECUTE FUNCTION validate_encounter_dates();
+
+
+-- Validates date and value in observation
+CREATE OR REPLACE FUNCTION validate_observation()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.effectivedate > NOW() THEN
+        RAISE EXCEPTION 'Measurement date (%) cannot be in the future.', NEW.effectivedate;
+    END IF;
+
+    IF NEW.numericvalue < 0 THEN
+        RAISE EXCEPTION 'The measurement value (%) cannot be negative.', NEW.numericvalue;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_validate_observation
+BEFORE INSERT OR UPDATE ON observations
+FOR EACH ROW EXECUTE FUNCTION validate_observation();
+
+
+-- UPDATES --
 
 -- Calculates total cost for a claim after any changes in claims_transactions
 CREATE OR REPLACE FUNCTION update_claim_total()
@@ -103,30 +198,6 @@ FOR EACH ROW
 EXECUTE FUNCTION update_claim_total();
 
 
--- Forbids changing medications for a dead patient
-CREATE OR REPLACE FUNCTION prevent_med_after_death()
-RETURNS TRIGGER AS $$
-DECLARE
-    death_date DATE;
-BEGIN
-    SELECT DEATHDATE INTO death_date
-    FROM PATIENTS
-    WHERE ID = NEW.PATIENT;
-
-    IF death_date IS NOT NULL AND death_date <= CURRENT_DATE THEN
-        RAISE EXCEPTION 'Cannot asign medication to a dead patient (ID=%, date of death=%).', NEW.PATIENT, death_date;
-    END IF;
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_prevent_med_after_death
-BEFORE INSERT OR UPDATE ON MEDICATIONS
-FOR EACH ROW
-EXECUTE FUNCTION prevent_med_after_death();
-
-
 -- Updates last visit date in PATIENTS after new visit
 CREATE OR REPLACE FUNCTION update_patient_last_visit() RETURNS TRIGGER AS $$
 DECLARE
@@ -160,70 +231,6 @@ CREATE TRIGGER TRG_CLAIM_BEFORE_INSERT
 BEFORE INSERT ON CLAIMS
 FOR EACH ROW
 EXECUTE FUNCTION set_claim_defaults();
-
-
--- Validates date and value in observation
-CREATE OR REPLACE FUNCTION validate_observation()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.effectivedate > NOW() THEN
-        RAISE EXCEPTION 'Measurement date (%) cannot be in the future.', NEW.effectivedate;
-    END IF;
-
-    IF NEW.numericvalue < 0 THEN
-        RAISE EXCEPTION 'The measurement value (%) cannot be negative.', NEW.numericvalue;
-    END IF;
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_validate_observation
-BEFORE INSERT OR UPDATE ON observations
-FOR EACH ROW EXECUTE FUNCTION validate_observation();
-
-
--- Blocks repeated registration of the same vaccine on a given day for a given patient
-CREATE OR REPLACE FUNCTION prevent_duplicate_immunization()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF EXISTS (
-        SELECT 1 FROM immunizations
-        WHERE patient = NEW.patient
-          AND code = NEW.code
-          AND DATE(date) = DATE(NEW.date)
-    ) THEN
-        RAISE EXCEPTION 'The patient (ID=%) has already received the immunization with code % on the same day (%).',
-            NEW.patient, NEW.code, NEW.date;
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_prevent_duplicate_immunization
-BEFORE INSERT ON immunizations
-FOR EACH ROW
-EXECUTE FUNCTION prevent_duplicate_immunization();
-
-
--- Checks if start date is earlier than end date in encounters, otherwise raises exception
-CREATE OR REPLACE FUNCTION validate_encounter_dates()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.start IS NOT NULL
-       AND NEW.end IS NOT NULL
-       AND NEW.end < NEW.start THEN
-        RAISE EXCEPTION 'End date (%s) cannot be earlier than start date (%s).',
-                        NEW.end, NEW.start;
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_validate_encounter_dates
-BEFORE INSERT OR UPDATE ON encounters
-FOR EACH ROW
-EXECUTE FUNCTION validate_encounter_dates();
 
 
 -- Increments procedure count for patient after new procedure
