@@ -139,6 +139,7 @@ if st.button("Wyświetl pacjentów", on_click=toggle_show_patients):
     pass
 
 if st.session_state.show_patients_list:
+    st.write("### Lista pacjentów:")
     search_term = st.text_input("Wyszukaj pacjenta:").strip()
     if search_term:
         patients_df = query_db(f"""
@@ -156,7 +157,6 @@ if st.session_state.show_patients_list:
     if patients_df.empty:
         st.info("Brak pacjentów.")
     else:
-        st.write("### Lista pacjentów:")
         page = st.number_input("Strona", min_value=1, max_value=total_pages, step=1, value=1)
         start_idx = (page - 1) * patients_per_page
         end_idx = start_idx + patients_per_page
