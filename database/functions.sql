@@ -40,6 +40,15 @@ END;
 $$;
 
 
+CREATE OR REPLACE PROCEDURE delete_patient(p_patient_id UUID)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM patients WHERE id = p_patient_id;
+END;
+$$;
+
+
 CREATE OR REPLACE FUNCTION get_gender_distribution()
 RETURNS TABLE (gender TEXT, count BIGINT)
 AS $$
