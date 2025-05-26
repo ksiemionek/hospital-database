@@ -32,27 +32,20 @@ st.header("STATYSTYKI")
 st.subheader("Demografia pacjentów")
 col1, col2 = st.columns(2)
 with col1:
-    gender = query_db("SELECT gender, COUNT(*) AS count FROM patients GROUP BY gender")
+    gender = query_db("SELECT * FROM get_gender_distribution()")
     fig = px.pie(gender, names="gender", values="count", title="Rozkład płci pacjentów")
     st.plotly_chart(fig, use_container_width=True)
 with col2:
-    race = query_db("SELECT race, COUNT(*) AS count FROM patients GROUP BY race")
+    race = query_db("SELECT * FROM get_race_distribution()")
     fig = px.bar(race, x="race", y="count", title="Rozkład rasowy pacjentów")
     st.plotly_chart(fig, use_container_width=True)
 
 st.subheader("Mapa lokalizacji pacjentów")
-locations = query_db("SELECT lat, lon FROM patients WHERE lat IS NOT NULL AND lon IS NOT NULL")
+locations = query_db("SELECT * FROM get_patient_locations()")
 st.map(locations, zoom=6)
 
 st.subheader("Najczęstsze diagnozy pacjentów")
-conditions = query_db("""
-    SELECT description, COUNT(*) AS count
-    FROM conditions
-    WHERE description LIKE '%(disorder)'
-    GROUP BY description
-    ORDER BY count DESC
-    LIMIT 20
-""")
+conditions = query_db("SELECT * FROM get_top_diagnoses()")
 if conditions.empty:
     st.info("Brak diagnoz.")
 else:
@@ -142,14 +135,9 @@ if st.session_state.show_patients_list:
     st.write("### Lista pacjentów:")
     search_term = st.text_input("Wyszukaj pacjenta:").strip()
     if search_term:
-        patients_df = query_db(f"""
-                SELECT id, ssn, last, first
-                FROM patients
-                WHERE ssn ILIKE '%{search_term}%' OR last ILIKE '%{search_term}%' OR first ILIKE '%{search_term}%'
-                ORDER BY id
-            """)
+        patients_df = query_db(f"SELECT * FROM search_patients('{search_term}')")
     else:
-        patients_df = query_db("SELECT id, ssn, last, first FROM patients ORDER BY id")
+        patients_df = query_db("SELECT * FROM get_all_patients()")
 
     patients_per_page = 50
     total_pages = (len(patients_df) - 1) // patients_per_page + 1
@@ -163,11 +151,7 @@ if st.session_state.show_patients_list:
 
         for index, row in patients_df.iloc[start_idx:end_idx].iterrows():
             with st.expander(f"SSN: {row['ssn']} - {row['last']} {row['first']}"):
-                details = query_db(f"""
-                    SELECT birthdate, gender, race, ethnicity, lat, lon, ssn
-                    FROM patients
-                    WHERE id = '{row['id']}'
-                """)
+                details = query_db(f"SELECT * FROM get_patient_details('{row['id']}')")
                 st.write("**Numer SSN:**", details.at[0, "ssn"])
                 st.write("**Data urodzenia:**", details.at[0, "birthdate"])
                 st.write("**Płeć:**", details.at[0, "gender"])
@@ -175,13 +159,7 @@ if st.session_state.show_patients_list:
                 st.write("**Etniczność:**", details.at[0, "ethnicity"])
                 st.write("**Lokalizacja:**", f"{details.at[0, 'lat']}, {details.at[0, 'lon']}")
 
-                diagnoses = query_db(f"""
-                           SELECT description 
-                           FROM conditions
-                           WHERE patient = '{row['id']}' AND description LIKE '%(disorder)'
-                           ORDER BY start DESC
-                           LIMIT 10
-                       """)
+                diagnoses = query_db(f"SELECT * FROM get_patient_diagnoses('{row['id']}')")
 
                 if diagnoses.empty:
                     st.write("**Diagnozy:** brak.")
@@ -190,13 +168,7 @@ if st.session_state.show_patients_list:
                     for desc in diagnoses['description']:
                         st.write(f"- {desc}")
 
-                medications = query_db(f"""
-                            SELECT description, start, stop, dispenses
-                            FROM medications
-                            WHERE patient = '{row['id']}'
-                            ORDER BY start DESC
-                            LIMIT 10
-                        """)
+                medications = query_db(f"SELECT * FROM get_patient_medications('{row['id']}')")
                 if medications.empty:
                     st.write("**Przypisane leki:** brak.")
                 else:
@@ -209,13 +181,7 @@ if st.session_state.show_patients_list:
 
                         st.write(f"- {med['description']} (od {start_str} do {stop_str} - {med['dispenses']} szt.)")
 
-                encounters = query_db(f"""
-                    SELECT start, stop, encounterclass, description, total_claim_cost
-                    FROM encounters
-                    WHERE patient = '{row['id']}'
-                    ORDER BY start DESC
-                    LIMIT 10
-                """)
+                encounters = query_db(f"SELECT * FROM get_patient_encounters('{row['id']}')")
 
                 if encounters.empty:
                     st.write("**Pobyty w szpitalu:** brak.")
@@ -249,11 +215,7 @@ if st.button("Wyświetl zapasy leków", on_click=toggle_medications):
 if st.session_state.show_medications:
     st.subheader("Dostępne leki")
 
-    medications_summary = query_db("""
-        SELECT * FROM medication_summary 
-        ORDER BY total_dispenses DESC 
-        LIMIT 20
-    """)
+    medications_summary = query_db("SELECT * FROM get_medications_summary()")
 
     if medications_summary.empty:
         st.info("Brak danych.")
@@ -281,11 +243,7 @@ if st.button("Wyświetl materiały medyczne", on_click=toggle_supplies):
 if st.session_state.show_supplies:
     st.header("Dostępne materiały medyczne")
 
-    supplies_summary = query_db("""
-        SELECT * FROM supply_summary 
-        ORDER BY total_quantity DESC 
-        LIMIT 20
-    """)
+    supplies_summary = query_db("SELECT * FROM get_supplies_summary()")
 
     if supplies_summary.empty:
         st.info("Brak danych.")
@@ -295,4 +253,3 @@ if st.session_state.show_supplies:
             "total_quantity": "Łączna liczba"
         })
         st.dataframe(supplies_display, use_container_width=True)
-
