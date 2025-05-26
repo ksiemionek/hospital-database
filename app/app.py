@@ -147,8 +147,38 @@ if st.session_state.show_patients_list:
         start_idx = (page - 1) * patients_per_page
         end_idx = start_idx + patients_per_page
 
-        for index, row in patients_df.iloc[start_idx:end_idx].iterrows():
-            with st.expander(f"SSN: {row['ssn']} - {row['last']} {row['first']}"):
+    for index, row in patients_df.iloc[start_idx:end_idx].iterrows():
+        delete_trigger = f"delete_trigger_{row['id']}"
+        confirm_trigger = f"confirm_delete_{row['id']}"
+
+        expanded = st.session_state.get(confirm_trigger, False)
+
+        with st.expander(f"SSN: {row['ssn']} - {row['last']} {row['first']}", expanded=expanded):
+            if st.session_state.get(confirm_trigger):
+                st.warning(f"Czy na pewno chcesz usunąć pacjenta **{row['first']} {row['last']}**?")
+                col1, col2 = st.columns([1, 1])
+                with col1:
+                    if st.button("Tak, usuń", key=f"yes_{row['id']}"):
+                        try:
+                            conn = psycopg2.connect(**DB_PARAMS)
+                            cur = conn.cursor()
+                            cur.execute("CALL delete_patient(%s)", [row['id']])
+                            conn.commit()
+                            cur.close()
+                            conn.close()
+                            st.success(f"Pacjent {row['first']} {row['last']} został usunięty.")
+                        except Exception as e:
+                            st.error(f"Nie udało się usunąć pacjenta: {e}")
+                with col2:
+                    if st.button("Anuluj", key=f"no_{row['id']}"):
+                        st.session_state[confirm_trigger] = False
+                        st.rerun()
+            else:
+                if st.button("Usuń pacjenta", key=delete_trigger):
+                    st.session_state[confirm_trigger] = True
+                    st.rerun()
+
+            if not st.session_state.get(confirm_trigger):
                 details = query_db(f"SELECT * FROM get_patient_details('{row['id']}')")
                 st.write("**Numer SSN:**", details.at[0, "ssn"])
                 st.write("**Data urodzenia:**", details.at[0, "birthdate"])
@@ -158,37 +188,32 @@ if st.session_state.show_patients_list:
                 st.write("**Lokalizacja:**", f"{details.at[0, 'lat']}, {details.at[0, 'lon']}")
 
                 diagnoses = query_db(f"SELECT * FROM get_patient_diagnoses('{row['id']}')")
-
-                if diagnoses.empty:
-                    st.write("**Diagnozy:** brak.")
-                else:
+                if not diagnoses.empty:
                     st.write("**Diagnozy:**")
                     for desc in diagnoses['description']:
                         st.write(f"- {desc}")
+                else:
+                    st.write("**Diagnozy:** brak.")
 
                 medications = query_db(f"SELECT * FROM get_patient_medications('{row['id']}')")
-                if medications.empty:
-                    st.write("**Przypisane leki:** brak.")
-                else:
+                if not medications.empty:
                     st.write("**Przypisane leki:**")
                     for _, med in medications.iterrows():
-                        start = med['start']
-                        stop = med['stop']
-                        start_str = start.strftime("%Y-%m-%d")
-                        stop_str = stop.strftime("%Y-%m-%d") if pd.notna(stop) else "..."
-
-                        st.write(f"- {med['description']} (od {start_str} do {stop_str} - {med['dispenses']} szt.)")
+                        start = med['start'].strftime("%Y-%m-%d")
+                        stop = med['stop'].strftime("%Y-%m-%d") if pd.notna(med['stop']) else "..."
+                        st.write(f"- {med['description']} (od {start} do {stop} - {med['dispenses']} szt.)")
+                else:
+                    st.write("**Przypisane leki:** brak.")
 
                 encounters = query_db(f"SELECT * FROM get_patient_encounters('{row['id']}')")
-
-                if encounters.empty:
-                    st.write("**Pobyty w szpitalu:** brak.")
-                else:
+                if not encounters.empty:
                     st.write("**Pobyty w szpitalu:**")
                     for _, enc in encounters.iterrows():
                         start_str = enc['start'].strftime("%Y-%m-%d %H:%M")
                         stop_str = enc['stop'].strftime("%Y-%m-%d %H:%M")
-                        st.write(f"- {enc['description']} ({enc['encounterclass']}) od {start_str} do {stop_str} — koszt pobytu: {enc['total_claim_cost']} USD")
+                        st.write(f"- {enc['description']} ({enc['encounterclass']}) od {start_str} do {stop_str} — koszt: {enc['total_claim_cost']} USD")
+                else:
+                    st.write("**Pobyty w szpitalu:** brak.")
 
 # ===========================================================
 #                         ZAPASY
