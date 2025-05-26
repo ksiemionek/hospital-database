@@ -84,4 +84,8 @@ docker exec -i postgres psql -U admin -d szpital_z07 -c "COPY DEVICES FROM '/tmp
 docker cp ./database/triggers.sql postgres:/tmp/triggers.sql
 docker exec -i postgres psql -U admin -d szpital_z07 -f /tmp/triggers.sql
 
+# FUNCTIONS AND PROCEDURES
+docker cp ./database/functions.sql postgres:/tmp/functions.sql
+docker exec -i postgres psql -U admin -d szpital_z07 -f /tmp/functions.sql
+
 rm -rf ./csv
