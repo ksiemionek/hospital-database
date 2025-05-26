@@ -1,3 +1,45 @@
+CREATE OR REPLACE PROCEDURE add_patient(
+    IN p_id UUID,
+    IN p_birthdate DATE,
+    IN p_ssn VARCHAR,
+    IN p_first VARCHAR,
+    IN p_last VARCHAR,
+    IN p_gender CHAR(1),
+    IN p_race VARCHAR,
+    IN p_ethnicity VARCHAR,
+    IN p_lat NUMERIC(11,8),
+    IN p_lon NUMERIC(11,8)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_gender NOT IN ('M', 'F') THEN
+        RAISE EXCEPTION 'Invalid gender: % (expected "M" or "F")', p_gender;
+    END IF;
+
+    IF p_birthdate > CURRENT_DATE THEN
+        RAISE EXCEPTION 'Birthdate cannot be in the future: %', p_birthdate;
+    END IF;
+
+    IF p_lat IS NOT NULL AND (p_lat < -90 OR p_lat > 90) THEN
+        RAISE EXCEPTION 'Invalid latitude: % (must be between -90 and 90)', p_lat;
+    END IF;
+
+    IF p_lon IS NOT NULL AND (p_lon < -180 OR p_lon > 180) THEN
+        RAISE EXCEPTION 'Invalid longitude: % (must be between -180 and 180)', p_lon;
+    END IF;
+
+    INSERT INTO patients (
+        id, birthdate, ssn, first, last,
+        gender, race, ethnicity, lat, lon
+    ) VALUES (
+        p_id, p_birthdate, p_ssn, p_first, p_last,
+        p_gender, p_race, p_ethnicity, p_lat, p_lon
+    );
+END;
+$$;
+
+
 CREATE OR REPLACE FUNCTION get_gender_distribution()
 RETURNS TABLE (gender TEXT, count BIGINT)
 AS $$

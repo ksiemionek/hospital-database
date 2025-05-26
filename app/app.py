@@ -11,7 +11,7 @@ DB_PARAMS = {
     "user": "admin",
     "password": "password",
     "host": "localhost",
-    "port": "5432"
+    "port": "5433"
 }
 
 
@@ -98,16 +98,13 @@ if st.session_state.show_add_patient:
                     conn = psycopg2.connect(**DB_PARAMS)
                     cur = conn.cursor()
                     cur.execute("""
-                        INSERT INTO patients (
-                            id, birthdate, ssn, first, last,
-                            gender, race, ethnicity, lat, lon
-                        )
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (
+                        CALL add_patient(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, [
                         str(uuid.uuid4()), birthdate, ssn, first_name, last_name,
                         gender, race, ethnicity,
-                        lat if lat != 0 else None, lon if lon != 0 else None
-                    ))
+                        lat if lat != 0 else None,
+                        lon if lon != 0 else None
+                    ])
                     conn.commit()
                     cur.close()
                     conn.close()
@@ -115,6 +112,7 @@ if st.session_state.show_add_patient:
                     st.session_state.show_add_patient = False
                 except Exception as e:
                     st.error(f"Wystąpił błąd!\n{e}")
+
 
 # -----------------------------------------------
 #              Wyświetlanie pacjentów
