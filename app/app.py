@@ -11,7 +11,7 @@ DB_PARAMS = {
     "user": "admin",
     "password": "password",
     "host": "localhost",
-    "port": "5433"
+    "port": "5432"
 }
 
 
@@ -32,20 +32,27 @@ st.header("STATYSTYKI")
 st.subheader("Demografia pacjentów")
 col1, col2 = st.columns(2)
 with col1:
-    gender = query_db("SELECT * FROM get_gender_distribution()")
+    gender = query_db("SELECT gender, COUNT(*) AS count FROM patients GROUP BY gender")
     fig = px.pie(gender, names="gender", values="count", title="Rozkład płci pacjentów")
     st.plotly_chart(fig, use_container_width=True)
 with col2:
-    race = query_db("SELECT * FROM get_race_distribution()")
+    race = query_db("SELECT race, COUNT(*) AS count FROM patients GROUP BY race")
     fig = px.bar(race, x="race", y="count", title="Rozkład rasowy pacjentów")
     st.plotly_chart(fig, use_container_width=True)
 
 st.subheader("Mapa lokalizacji pacjentów")
-locations = query_db("SELECT * FROM get_patient_locations()")
+locations = query_db("SELECT lat, lon FROM patients WHERE lat IS NOT NULL AND lon IS NOT NULL")
 st.map(locations, zoom=6)
 
 st.subheader("Najczęstsze diagnozy pacjentów")
-conditions = query_db("SELECT * FROM get_top_diagnoses()")
+conditions = query_db("""
+    SELECT description, COUNT(*) AS count
+    FROM conditions
+    WHERE description LIKE '%(disorder)'
+    GROUP BY description
+    ORDER BY count DESC
+    LIMIT 20
+""")
 if conditions.empty:
     st.info("Brak diagnoz.")
 else:
@@ -98,13 +105,16 @@ if st.session_state.show_add_patient:
                     conn = psycopg2.connect(**DB_PARAMS)
                     cur = conn.cursor()
                     cur.execute("""
-                        CALL add_patient(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """, [
+                        INSERT INTO patients (
+                            id, birthdate, ssn, first, last,
+                            gender, race, ethnicity, lat, lon
+                        )
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (
                         str(uuid.uuid4()), birthdate, ssn, first_name, last_name,
                         gender, race, ethnicity,
-                        lat if lat != 0 else None,
-                        lon if lon != 0 else None
-                    ])
+                        lat if lat != 0 else None, lon if lon != 0 else None
+                    ))
                     conn.commit()
                     cur.close()
                     conn.close()
@@ -112,7 +122,6 @@ if st.session_state.show_add_patient:
                     st.session_state.show_add_patient = False
                 except Exception as e:
                     st.error(f"Wystąpił błąd!\n{e}")
-
 
 # -----------------------------------------------
 #              Wyświetlanie pacjentów
@@ -133,9 +142,14 @@ if st.session_state.show_patients_list:
     st.write("### Lista pacjentów:")
     search_term = st.text_input("Wyszukaj pacjenta:").strip()
     if search_term:
-        patients_df = query_db(f"SELECT * FROM search_patients('{search_term}')")
+        patients_df = query_db(f"""
+                SELECT id, ssn, last, first
+                FROM patients
+                WHERE ssn ILIKE '%{search_term}%' OR last ILIKE '%{search_term}%' OR first ILIKE '%{search_term}%'
+                ORDER BY id
+            """)
     else:
-        patients_df = query_db("SELECT * FROM get_all_patients()")
+        patients_df = query_db("SELECT id, ssn, last, first FROM patients ORDER BY id")
 
     patients_per_page = 50
     total_pages = (len(patients_df) - 1) // patients_per_page + 1
@@ -147,39 +161,13 @@ if st.session_state.show_patients_list:
         start_idx = (page - 1) * patients_per_page
         end_idx = start_idx + patients_per_page
 
-    for index, row in patients_df.iloc[start_idx:end_idx].iterrows():
-        delete_trigger = f"delete_trigger_{row['id']}"
-        confirm_trigger = f"confirm_delete_{row['id']}"
-
-        expanded = st.session_state.get(confirm_trigger, False)
-
-        with st.expander(f"SSN: {row['ssn']} - {row['last']} {row['first']}", expanded=expanded):
-            if st.session_state.get(confirm_trigger):
-                st.warning(f"Czy na pewno chcesz usunąć pacjenta **{row['first']} {row['last']}**?")
-                col1, col2 = st.columns([1, 1])
-                with col1:
-                    if st.button("Tak, usuń", key=f"yes_{row['id']}"):
-                        try:
-                            conn = psycopg2.connect(**DB_PARAMS)
-                            cur = conn.cursor()
-                            cur.execute("CALL delete_patient(%s)", [row['id']])
-                            conn.commit()
-                            cur.close()
-                            conn.close()
-                            st.success(f"Pacjent {row['first']} {row['last']} został usunięty.")
-                        except Exception as e:
-                            st.error(f"Nie udało się usunąć pacjenta: {e}")
-                with col2:
-                    if st.button("Anuluj", key=f"no_{row['id']}"):
-                        st.session_state[confirm_trigger] = False
-                        st.rerun()
-            else:
-                if st.button("Usuń pacjenta", key=delete_trigger):
-                    st.session_state[confirm_trigger] = True
-                    st.rerun()
-
-            if not st.session_state.get(confirm_trigger):
-                details = query_db(f"SELECT * FROM get_patient_details('{row['id']}')")
+        for index, row in patients_df.iloc[start_idx:end_idx].iterrows():
+            with st.expander(f"SSN: {row['ssn']} - {row['last']} {row['first']}"):
+                details = query_db(f"""
+                    SELECT birthdate, gender, race, ethnicity, lat, lon, ssn
+                    FROM patients
+                    WHERE id = '{row['id']}'
+                """)
                 st.write("**Numer SSN:**", details.at[0, "ssn"])
                 st.write("**Data urodzenia:**", details.at[0, "birthdate"])
                 st.write("**Płeć:**", details.at[0, "gender"])
@@ -187,33 +175,56 @@ if st.session_state.show_patients_list:
                 st.write("**Etniczność:**", details.at[0, "ethnicity"])
                 st.write("**Lokalizacja:**", f"{details.at[0, 'lat']}, {details.at[0, 'lon']}")
 
-                diagnoses = query_db(f"SELECT * FROM get_patient_diagnoses('{row['id']}')")
-                if not diagnoses.empty:
+                diagnoses = query_db(f"""
+                           SELECT description 
+                           FROM conditions
+                           WHERE patient = '{row['id']}' AND description LIKE '%(disorder)'
+                           ORDER BY start DESC
+                           LIMIT 10
+                       """)
+
+                if diagnoses.empty:
+                    st.write("**Diagnozy:** brak.")
+                else:
                     st.write("**Diagnozy:**")
                     for desc in diagnoses['description']:
                         st.write(f"- {desc}")
-                else:
-                    st.write("**Diagnozy:** brak.")
 
-                medications = query_db(f"SELECT * FROM get_patient_medications('{row['id']}')")
-                if not medications.empty:
+                medications = query_db(f"""
+                            SELECT description, start, stop, dispenses
+                            FROM medications
+                            WHERE patient = '{row['id']}'
+                            ORDER BY start DESC
+                            LIMIT 10
+                        """)
+                if medications.empty:
+                    st.write("**Przypisane leki:** brak.")
+                else:
                     st.write("**Przypisane leki:**")
                     for _, med in medications.iterrows():
-                        start = med['start'].strftime("%Y-%m-%d")
-                        stop = med['stop'].strftime("%Y-%m-%d") if pd.notna(med['stop']) else "..."
-                        st.write(f"- {med['description']} (od {start} do {stop} - {med['dispenses']} szt.)")
-                else:
-                    st.write("**Przypisane leki:** brak.")
+                        start = med['start']
+                        stop = med['stop']
+                        start_str = start.strftime("%Y-%m-%d")
+                        stop_str = stop.strftime("%Y-%m-%d") if pd.notna(stop) else "..."
 
-                encounters = query_db(f"SELECT * FROM get_patient_encounters('{row['id']}')")
-                if not encounters.empty:
+                        st.write(f"- {med['description']} (od {start_str} do {stop_str} - {med['dispenses']} szt.)")
+
+                encounters = query_db(f"""
+                    SELECT start, stop, encounterclass, description, total_claim_cost
+                    FROM encounters
+                    WHERE patient = '{row['id']}'
+                    ORDER BY start DESC
+                    LIMIT 10
+                """)
+
+                if encounters.empty:
+                    st.write("**Pobyty w szpitalu:** brak.")
+                else:
                     st.write("**Pobyty w szpitalu:**")
                     for _, enc in encounters.iterrows():
                         start_str = enc['start'].strftime("%Y-%m-%d %H:%M")
                         stop_str = enc['stop'].strftime("%Y-%m-%d %H:%M")
-                        st.write(f"- {enc['description']} ({enc['encounterclass']}) od {start_str} do {stop_str} — koszt: {enc['total_claim_cost']} USD")
-                else:
-                    st.write("**Pobyty w szpitalu:** brak.")
+                        st.write(f"- {enc['description']} ({enc['encounterclass']}) od {start_str} do {stop_str} — koszt pobytu: {enc['total_claim_cost']} USD")
 
 # ===========================================================
 #                         ZAPASY
@@ -238,7 +249,11 @@ if st.button("Wyświetl zapasy leków", on_click=toggle_medications):
 if st.session_state.show_medications:
     st.subheader("Dostępne leki")
 
-    medications_summary = query_db("SELECT * FROM get_medications_summary()")
+    medications_summary = query_db("""
+        SELECT * FROM medication_summary 
+        ORDER BY total_dispenses DESC 
+        LIMIT 20
+    """)
 
     if medications_summary.empty:
         st.info("Brak danych.")
@@ -266,7 +281,11 @@ if st.button("Wyświetl materiały medyczne", on_click=toggle_supplies):
 if st.session_state.show_supplies:
     st.header("Dostępne materiały medyczne")
 
-    supplies_summary = query_db("SELECT * FROM get_supplies_summary()")
+    supplies_summary = query_db("""
+        SELECT * FROM supply_summary 
+        ORDER BY total_quantity DESC 
+        LIMIT 20
+    """)
 
     if supplies_summary.empty:
         st.info("Brak danych.")
@@ -276,3 +295,4 @@ if st.session_state.show_supplies:
             "total_quantity": "Łączna liczba"
         })
         st.dataframe(supplies_display, use_container_width=True)
+
