@@ -54,7 +54,8 @@ Celem naszego projektu było utworzenie bazy danych umożliwiającej zarządzani
 ## Podział pracy
 
 - Kacper Siemionek: struktura i połączenia tabel, indeksy, aplikacja webowa, skrypt do utworzenia bazy
-- # Michał Pędziwiatr: Aplikacja webowa, optymalizacja bazy danych oraz zwizualizowanie jej struktury za pomocą diagramu
+- Michał Pędziwiatr: Aplikacja webowa, optymalizacja bazy danych oraz zwizualizowanie jej struktury za pomocą diagramu
+- Miłosz Andryszczuk: funkcje, procedury i triggery – walidacja danych, automatyczne aktualizacje oraz audyt operacji usuwania
 
 ## Dane techniczne
 
@@ -73,11 +74,11 @@ Celem naszego projektu było utworzenie bazy danych umożliwiającej zarządzani
 
 ### Tabele kliniczne
 
-- `conditions` - 
+- `conditions` - choroby, urazy pacjentów
 - `medications` - przepisane leki
 - `procedures` - wykonane procedury medyczne
 - `immunizations` - szczepienia pacjentów
-- `allergies` - alergie pacjentów 
+- `allergies` - alergie pacjentów
 - `observations` - obserwacje, wyniki badań
 - `imaging_studies` - dokumentacja badań diagnostycznych
 - `careplans` - dokumentacja planów i celów leczenia
@@ -93,10 +94,47 @@ Celem naszego projektu było utworzenie bazy danych umożliwiającej zarządzani
 
 ## Funkcjonalność
 
-Baza danych została zoptymalizowana za pomocą odpowiednich indeksów przyspieszających operowanie na danych. Wprowadziliśmy również niezbędne funkcje potrzebne do działania aplikacji:
+Baza danych została zoptymalizowana za pomocą odpowiednich indeksów przyspieszających operowanie na danych. Wprowadziliśmy również niezbędne funkcje i procedury potrzebne do działania aplikacji:
 
-- tu funkcje i krotki opis jak w tabelach
+### Procedury
 
-Poza funkcjami dostępne są równie wyzwalacze konieczne do prawidłowej pracy bazy:
+- `add_patient` – dodaje pacjenta do systemu po uprzedniej walidacji danych wejściowych
+- `delete_patient` – usuwa pacjenta oraz jego powiązane dane
 
-- tu triggery i krotki opis
+### Funkcje
+
+- `get_gender_distribution` – zwraca rozkład pacjentów według płci
+- `get_race_distribution` – zwraca rozkład pacjentów według rasy
+- `get_patient_locations` – zwraca współrzędne geograficzne pacjentów
+- `get_top_diagnoses` – zwraca najczęściej występujące diagnozy
+- `search_patients` – umożliwia wyszukiwanie pacjentów po imieniu, nazwisku lub numerze SSN
+- `get_all_patients` – zwraca wszystkich pacjentów
+- `get_patient_details` – zwraca szczegóły pojedynczego pacjenta
+- `get_patient_diagnoses` – zwraca ostatnie diagnozy danego pacjenta
+- `get_patient_medications` – zwraca ostatnio przepisane leki pacjenta
+- `get_patient_encounters` – zwraca ostatnie wizyty danego pacjenta w szpitalu
+- `get_medications_summary` – zwraca 20 najczęściej przepisywanych leków
+- `get_supplies_summary` – zwraca 20 najczęściej zużywanych materiałów medycznych
+
+
+### Triggery
+Poza funkcjami dostępne są równie wyzwalacze wykorzystywane w bazie danych do walidacji, automatycznych aktualizacji oraz utrzymania integralności danych:
+
+#### Audyt
+
+- `trg_patients_after_delete` – zapisuje usunięte rekordy z `patients` do `patients_audit` jako JSONB
+- `trg_patients_audit_after_insert` – ogranicza rozmiar tabeli `patients_audit` do 100 rekordów, usuwając najstarsze wpisy po każdym dodaniu
+
+#### Walidacja danych
+
+- `trg_prevent_duplicate_immunization` – uniemożliwia dodanie tej samej szczepionki dla danego pacjenta tego samego dnia
+- `trg_prevent_med_after_death` – zapobiega przypisywaniu leków pacjentowi, który już nie żyje
+- `trg_validate_encounter_dates` – wymusza, aby data zakończenia wizyty nie była wcześniejsza niż data rozpoczęcia
+- `trg_validate_observation` – sprawdza poprawność danych wstawianych do tabeli `observations`
+
+#### Automatyczne aktualizacje
+
+- `trg_update_claim_total` – przelicza łączną kwotę roszczenia po każdej modyfikacji powiązanych transakcji w `claims_transactions`
+- `trg_visit_after_insert` – aktualizuje datę ostatniej wizyty pacjenta po każdej nowej rejestracji w tabeli `encounters`
+- `trg_claim_before_insert` – ustawia domyślną datę utworzenia roszczenia, jeśli nie została podana
+- `trg_increment_patient_procedure_count` – inkrementuje licznik procedur pacjenta po dodaniu nowej procedury medycznej
