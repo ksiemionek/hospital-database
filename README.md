@@ -53,7 +53,7 @@ Celem naszego projektu było utworzenie bazy danych umożliwiającej zarządzani
 
 ## Podział pracy
 
-- Kacper Siemionek: struktura tabel, aplikacja do wizualizacji, skrypt do utworzenia bazy
+- Kacper Siemionek: struktura i połączenia tabel, indeksy, aplikacja do wizualizacji, skrypt do utworzenia bazy
 - ziuteks
 
 ## Dane techniczne
