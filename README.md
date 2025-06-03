@@ -53,7 +53,7 @@ Celem naszego projektu było utworzenie bazy danych umożliwiającej zarządzani
 
 ## Podział pracy
 
-- Kacper Siemionek: struktura i połączenia tabel, indeksy, aplikacja do wizualizacji, skrypt do utworzenia bazy
+- Kacper Siemionek: struktura i połączenia tabel, indeksy, aplikacja webowa, skrypt do utworzenia bazy
 - # Michał Pędziwiatr: Aplikacja webowa, optymalizacja bazy danych oraz zwizualizowanie jej struktury za pomocą diagramu
 
 ## Dane techniczne
