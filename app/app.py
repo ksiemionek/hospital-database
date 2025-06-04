@@ -78,6 +78,67 @@ def render_statistics():
 #           PATIENTS
 # =============================
 
+
+def render_patient_section():
+    st.header("PACJENCI")
+
+    render_add_patient()
+    render_patient_list()
+
+
+def render_add_patient():
+    if "show_add_patient" not in st.session_state:
+        st.session_state.show_add_patient = False
+
+    if st.button("Dodaj pacjenta"):
+        st.session_state.show_add_patient = not st.session_state.show_add_patient
+
+    if st.session_state.show_add_patient:
+        with st.form("add_patient"):
+            first_name = st.text_input("Imię", max_chars=30)
+            last_name = st.text_input("Nazwisko", max_chars=30)
+            gender_options = {"Kobieta": "F", "Mężczyzna": "M"}
+            gender_display = st.selectbox("Płeć", options=list(gender_options.keys()))
+            gender = gender_options[gender_display]
+            race = st.text_input("Rasa", max_chars=10)
+            ethnicity = st.text_input("Etniczność", max_chars=20)
+            birthdate = st.date_input(
+                "Data urodzenia",
+                min_value=datetime.date(1900, 1, 1),
+                max_value=datetime.date.today()
+            )
+            ssn = st.text_input("Numer SSN", max_chars=11)
+            lat = st.number_input("Szerokość geograficzna", format="%.6f", step=0.000001)
+            lon = st.number_input("Długość geograficzna", format="%.6f", step=0.000001)
+            submitted = st.form_submit_button("Dodaj pacjenta")
+
+            if submitted:
+                if not all([first_name, last_name, race, ethnicity, ssn]):
+                    st.warning("Proszę uzupełnić wszystkie dane pacjenta!")
+                else:
+                    add_patient_to_db(
+                        first_name, last_name, gender, race, ethnicity, birthdate, ssn, lat, lon
+                    )
+
+
+def add_patient_to_db(first_name, last_name, gender, race, ethnicity, birthdate, ssn, lat, lon):
+    try:
+        with psycopg2.connect(**DB_PARAMS) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    CALL add_patient(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, [
+                    str(uuid.uuid4()), birthdate, ssn, first_name, last_name,
+                    gender, race, ethnicity,
+                    lat if lat != 0 else None,
+                    lon if lon != 0 else None
+                ])
+        st.success("Pacjent został dodany.")
+        st.session_state.show_add_patient = False
+    except Exception as e:
+        st.error(f"Wystąpił błąd!\n{e}")
+
+
 def render_patient_list():
     if "show_patients_list" not in st.session_state:
         st.session_state.show_patients_list = False
