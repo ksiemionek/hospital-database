@@ -107,10 +107,10 @@ CREATE OR REPLACE FUNCTION validate_encounter_dates()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.start IS NOT NULL
-       AND NEW.end IS NOT NULL
-       AND NEW.end < NEW.start THEN
+       AND NEW.stop IS NOT NULL
+       AND NEW.stop < NEW.start THEN
         RAISE EXCEPTION 'End date (%s) cannot be earlier than start date (%s).',
-                        NEW.end, NEW.start;
+                        NEW.stop, NEW.start;
     END IF;
     RETURN NEW;
 END;
