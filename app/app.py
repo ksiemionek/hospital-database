@@ -260,132 +260,59 @@ def render_patient_encounters(patient_id):
 
 
 
-# # ===========================================================
-# #                         PACJENCI
-# # ===========================================================
-# st.header("PACJENCI")
-# # -----------------------------------------------
-# #                Dodawanie pacjentów
-# # -----------------------------------------------
+# =============================
+#           SUPPLIES
+# =============================
 
-# if "show_add_patient" not in st.session_state:
-#     st.session_state.show_add_patient = False
+def render_inventory():
+    st.header("MAGAZYN SZPITALA")
 
-
-# def toggle_add_patient():
-#     st.session_state.show_add_patient = not st.session_state.show_add_patient
+    render_medications()
+    render_supplies()
 
 
-# st.button("Dodaj pacjenta", on_click=toggle_add_patient)
+def render_medications():
+    if "show_medications" not in st.session_state:
+        st.session_state.show_medications = False
 
-# if st.session_state.show_add_patient:
-#     with st.form("add_patient"):
-#         first_name = st.text_input("Imię", max_chars=30)
-#         last_name = st.text_input("Nazwisko", max_chars=30)
-#         gender_options = {"Kobieta": "F", "Mężczyzna": "M"}
-#         gender_display = st.selectbox("Płeć", options=list(gender_options.keys()))
-#         gender = gender_options[gender_display]
-#         race = st.text_input("Rasa", max_chars=10)
-#         ethnicity = st.text_input("Etniczność", max_chars=20)
-#         birthdate = st.date_input(
-#             "Data urodzenia",
-#             min_value=datetime.date(1900, 1, 1),
-#             max_value=datetime.date.today()
-#         )
-#         ssn = st.text_input("Numer SSN", max_chars=11)
-#         lat = st.number_input("Szerokość geograficzna", format="%.6f", step=0.000001)
-#         lon = st.number_input("Długość geograficzna", format="%.6f", step=0.000001)
-#         submitted = st.form_submit_button("Dodaj pacjenta")
+    if st.button("Wyświetl zapasy leków"):
+        st.session_state.show_medications = not st.session_state.show_medications
 
-#         if submitted:
-#             if not all([first_name, last_name, race, ethnicity, ssn]):
-#                 st.warning("Proszę uzupełnić wszystkie dane pacjenta!")
-#             else:
-#                 try:
-#                     conn = psycopg2.connect(**DB_PARAMS)
-#                     cur = conn.cursor()
-#                     cur.execute("""
-#                         CALL add_patient(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-#                     """, [
-#                         str(uuid.uuid4()), birthdate, ssn, first_name, last_name,
-#                         gender, race, ethnicity,
-#                         lat if lat != 0 else None,
-#                         lon if lon != 0 else None
-#                     ])
-#                     conn.commit()
-#                     cur.close()
-#                     conn.close()
-#                     st.success("Pacjent został dodany.")
-#                     st.session_state.show_add_patient = False
-#                 except Exception as e:
-#                     st.error(f"Wystąpił błąd!\n{e}")
+    if st.session_state.show_medications:
+        st.subheader("Dostępne leki")
+        medications_summary = query_db("SELECT * FROM get_medications_summary()")
+        if medications_summary.empty:
+            st.info("Brak danych.")
+        else:
+            meds_display = medications_summary.rename(columns={
+                "description": "Nazwa leku",
+                "total_dispenses": "Łączna liczba dawek"
+            })
+            st.dataframe(meds_display, use_container_width=True)
 
 
-# # ===========================================================
-# #                         ZAPASY
-# # ===========================================================
-# st.header("MAGAZYN SZPITALA")
+def render_supplies():
+    if "show_supplies" not in st.session_state:
+        st.session_state.show_supplies = False
 
-# # -----------------------------------------------
-# #              Wyświetlanie leków
-# # -----------------------------------------------
+    if st.button("Wyświetl materiały medyczne"):
+        st.session_state.show_supplies = not st.session_state.show_supplies
 
-# if "show_medications" not in st.session_state:
-#     st.session_state.show_medications = False
-
-
-# def toggle_medications():
-#     st.session_state.show_medications = not st.session_state.show_medications
-
-
-# if st.button("Wyświetl zapasy leków", on_click=toggle_medications):
-#     pass
-
-# if st.session_state.show_medications:
-#     st.subheader("Dostępne leki")
-
-#     medications_summary = query_db("SELECT * FROM get_medications_summary()")
-
-#     if medications_summary.empty:
-#         st.info("Brak danych.")
-#     else:
-#         meds_display = medications_summary.rename(columns={
-#             "description": "Nazwa leku",
-#             "total_dispenses": "Łączna liczba dawek",
-#         })
-#         st.dataframe(meds_display, use_container_width=True)
-
-# # -----------------------------------------------
-# #              Wyświetlanie zapasów
-# # -----------------------------------------------
-# if "show_supplies" not in st.session_state:
-#     st.session_state.show_supplies = False
-
-
-# def toggle_supplies():
-#     st.session_state.show_supplies = not st.session_state.show_supplies
-
-
-# if st.button("Wyświetl materiały medyczne", on_click=toggle_supplies):
-#     pass
-
-# if st.session_state.show_supplies:
-#     st.header("Dostępne materiały medyczne")
-
-#     supplies_summary = query_db("SELECT * FROM get_supplies_summary()")
-
-#     if supplies_summary.empty:
-#         st.info("Brak danych.")
-#     else:
-#         supplies_display = supplies_summary.rename(columns={
-#             "description": "Nazwa materiału",
-#             "total_quantity": "Łączna liczba"
-#         })
-#         st.dataframe(supplies_display, use_container_width=True)
+    if st.session_state.show_supplies:
+        st.subheader("Dostępne materiały medyczne")
+        supplies_summary = query_db("SELECT * FROM get_supplies_summary()")
+        if supplies_summary.empty:
+            st.info("Brak danych.")
+        else:
+            supplies_display = supplies_summary.rename(columns={
+                "description": "Nazwa materiału",
+                "total_quantity": "Łączna liczba"
+            })
+            st.dataframe(supplies_display, use_container_width=True)
 
 
 # =============================
-#        MAIN
+#            MAIN
 # =============================
 
 def main():
