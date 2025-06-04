@@ -48,7 +48,7 @@ create table patients (
    lat                 decimal(11,8),
    lon                 decimal(11,8),
    healthcare_expenses decimal(15,4),
-   healthcare_coverage decimal(15,4),
+   healthcare_coverage decimal(15,4)
 );
 
 create table payers (
