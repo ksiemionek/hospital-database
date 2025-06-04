@@ -5,7 +5,6 @@ import psycopg2
 import uuid
 import datetime
 
-
 # =============================
 #        CONFIG & DB
 # =============================
@@ -21,9 +20,8 @@ DB_PARAMS = {
 
 @st.cache_data
 def query_db(sql):
-    connection = psycopg2.connect(**DB_PARAMS)
-    df = pd.read_sql(sql, connection)
-    connection.close()
+    with psycopg2.connect(**DB_PARAMS) as conn:
+        df = pd.read_sql(sql, conn)
     return df
 
 
@@ -33,11 +31,9 @@ def query_db(sql):
 
 st.set_page_config(layout="wide", page_title="Szpital")
 
-
 # =============================
-#         STATISTICS
+#        STATYSTYKI
 # =============================
-
 
 def render_statistics():
     st.header("STATYSTYKI")
@@ -75,9 +71,8 @@ def render_statistics():
 
 
 # =============================
-#           PATIENTS
+#        PACJENCI
 # =============================
-
 
 def render_patient_section():
     st.header("PACJENCI")
@@ -259,9 +254,8 @@ def render_patient_encounters(patient_id):
         st.write("**Pobyty w szpitalu:** brak.")
 
 
-
 # =============================
-#           SUPPLIES
+#        MAGAZYN
 # =============================
 
 def render_inventory():
@@ -312,12 +306,13 @@ def render_supplies():
 
 
 # =============================
-#            MAIN
+#        MAIN
 # =============================
 
 def main():
     render_statistics()
-    render_patient_list()
+    render_patient_section()
+    render_inventory()
 
 
 if __name__ == "__main__":
