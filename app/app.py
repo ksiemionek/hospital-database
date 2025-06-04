@@ -11,7 +11,7 @@ DB_PARAMS = {
     "user": "admin",
     "password": "password",
     "host": "localhost",
-    "port": "5433"
+    "port": "5432"
 }
 
 

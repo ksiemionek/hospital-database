@@ -1,3 +1,7 @@
+drop VIEW supply_summary;
+drop view medication_summary;
+
+drop table if exists patients_audit;
 drop table if exists claims_transactions;
 drop table if exists claims;
 drop table if exists allergies;
@@ -45,7 +49,7 @@ create table patients (
    lon                 decimal(11,8),
    healthcare_expenses decimal(15,4),
    healthcare_coverage decimal(15,4),
-   lastvisit           timestamp,
+   lastvisit           timestamp default current_timestamp,
    procedurecount      int default 0
 );
 
