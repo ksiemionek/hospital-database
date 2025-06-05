@@ -57,6 +57,7 @@ Celem naszego projektu było utworzenie bazy danych umożliwiającej zarządzani
 - Michał Pędziwiatr: Aplikacja webowa, optymalizacja bazy danych oraz diagram jej struktury
 - Miłosz Andryszczuk: funkcje, procedury i triggery – walidacja danych, automatyczne aktualizacje oraz audyt operacji usuwania
 - Wojciech Zieziula: struktura i połączenia tabel, refaktoryzacja kodu aplikacji webowej, skrypt do utworzenia bazy danych
+- Michał Mizia: struktura docker compose, struktura tabel
 
 ## Dane techniczne
 
