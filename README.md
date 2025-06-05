@@ -27,8 +27,8 @@ Dane do projektu pochodzą ze strony https://synthea.mitre.org/downloads, konkre
 Po udanym uruchomieniu bazy danych w Dockerze należy uruchomić skrypt `create_database.sh`, który pobiera plik .zip z danymi do wstawienia, a następnie tworzy bazę danych na podstawie pliku `create_schema.sql` i wstawia do niego wszystkie dane.
 
 ```sh
-chmod +x create_database.sh
-./create_database.sh
+chmod +x database/create_database.sh
+./database/create_database.sh
 ```
 
 ## Uruchomienie aplikacji
