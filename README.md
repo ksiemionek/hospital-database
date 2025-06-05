@@ -6,7 +6,7 @@ Grupa: Z07
 - Kacper Siemionek
 - Michał Pędziwiatr
 - Miłosz Andryszczuk
-- Wojtek Zieziula
+- Wojciech Zieziula
 
 ## Odpalenie dockera
 
@@ -56,6 +56,7 @@ Celem naszego projektu było utworzenie bazy danych umożliwiającej zarządzani
 - Kacper Siemionek: struktura i połączenia tabel, optymalizacja za pomocą indeksów, wizualizacja danych w aplikacji webowej, skrypt do utworzenia bazy
 - Michał Pędziwiatr: Aplikacja webowa, optymalizacja bazy danych oraz diagram jej struktury
 - Miłosz Andryszczuk: funkcje, procedury i triggery – walidacja danych, automatyczne aktualizacje oraz audyt operacji usuwania
+- Wojciech Zieziula: struktura i połączenia tabel, refaktoryzacja kodu aplikacji webowej, skrypt do utworzenia bazy danych
 
 ## Dane techniczne
 
