@@ -126,12 +126,12 @@ EXECUTE FUNCTION validate_encounter_dates();
 CREATE OR REPLACE FUNCTION validate_observation()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF NEW.effectivedate > NOW() THEN
-        RAISE EXCEPTION 'Measurement date (%) cannot be in the future.', NEW.effectivedate;
+    IF NEW.date > NOW() THEN
+        RAISE EXCEPTION 'Measurement date (%) cannot be in the future.', NEW.date;
     END IF;
 
-    IF NEW.numericvalue < 0 THEN
-        RAISE EXCEPTION 'The measurement value (%) cannot be negative.', NEW.numericvalue;
+    IF NEW.value::numeric < 0 THEN
+        RAISE EXCEPTION 'The measurement value (%) cannot be negative.', NEW.value;
     END IF;
 
     RETURN NEW;
@@ -203,9 +203,9 @@ CREATE OR REPLACE FUNCTION update_patient_last_visit() RETURNS TRIGGER AS $$
 DECLARE
     current_last TIMESTAMP;
 BEGIN
-    SELECT LASTVISIT INTO current_last FROM PATIENT WHERE PATIENTID = NEW.PATIENTID;
-    IF NEW.START IS NOT NULL AND (current_last IS NULL OR NEW.START > current_last) THEN
-        UPDATE PATIENT SET LASTVISIT = NEW.START WHERE PATIENTID = NEW.PATIENTID;
+    SELECT lastvisit INTO current_last FROM patients WHERE id = NEW.patient;
+    IF NEW.start IS NOT NULL AND (current_last IS NULL OR NEW.start > current_last) THEN
+        UPDATE patients SET lastvisit = NEW.start WHERE id = NEW.patient;
     END IF;
     RETURN NEW;
 END;
