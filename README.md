@@ -45,6 +45,14 @@ Po udanym zainstalowaniu możemy uruchomić aplikację.
 streamlit run app.py
 ```
 
+## Uruchomienie testów
+
+Po zainstalowaniu zależności
+
+```sh
+pytest ./tests
+```
+
 # Dokumentacja
 
 ## Cel projektu
@@ -57,7 +65,7 @@ Celem naszego projektu było utworzenie bazy danych umożliwiającej zarządzani
 - Michał Pędziwiatr: Aplikacja webowa, optymalizacja bazy danych oraz diagram jej struktury
 - Miłosz Andryszczuk: funkcje, procedury i triggery – walidacja danych, automatyczne aktualizacje oraz audyt operacji usuwania
 - Wojciech Zieziula: struktura i połączenia tabel, refaktoryzacja kodu aplikacji webowej, skrypt do utworzenia bazy danych
-- Michał Mizia: struktura docker compose, struktura tabel
+- Michał Mizia: struktura docker compose, struktura tabel, refactoring triggerów, testy jednostkowe
 
 ## Dane techniczne
 
@@ -93,7 +101,6 @@ Celem naszego projektu było utworzenie bazy danych umożliwiającej zarządzani
 - `claims_transactions` - transakcje finansowe dotyczące ubezpieczeń
 - `payer_transitions` - historia zmian ubezpieczeń
 
-
 ## Funkcjonalność
 
 Baza danych została zoptymalizowana za pomocą odpowiednich indeksów przyspieszających operowanie na danych. Wprowadziliśmy również niezbędne funkcje i procedury potrzebne do działania aplikacji:
@@ -118,8 +125,8 @@ Baza danych została zoptymalizowana za pomocą odpowiednich indeksów przyspies
 - `get_medications_summary` – zwraca 20 najczęściej przepisywanych leków
 - `get_supplies_summary` – zwraca 20 najczęściej zużywanych materiałów medycznych
 
-
 ### Triggery
+
 Poza funkcjami dostępne są równie wyzwalacze wykorzystywane w bazie danych do walidacji, automatycznych aktualizacji oraz utrzymania integralności danych:
 
 #### Audyt
