@@ -53,6 +53,12 @@ Po zainstalowaniu zależności
 pytest ./tests
 ```
 
+Plik test_tables_exist.py: testuje czy baza danych jest poprawnie tworzona, czy tabele, ograczniczenia, widoki i indeksy istnieją.
+
+Plik test_functions.py: testuje działanie dodanych funkcji.
+
+Plik test_triggers.py: testuje działanie triggerów przez pokazanie scenariusza w którym zostają wywołane.
+
 # Dokumentacja
 
 ## Cel projektu
