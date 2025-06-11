@@ -53,12 +53,6 @@ Po zainstalowaniu zależności
 pytest ./tests
 ```
 
-Plik test_tables_exist.py: testuje czy baza danych jest poprawnie tworzona, czy tabele, ograczniczenia, widoki i indeksy istnieją.
-
-Plik test_functions.py: testuje działanie dodanych funkcji.
-
-Plik test_triggers.py: testuje działanie triggerów przez pokazanie scenariusza w którym zostają wywołane.
-
 # Dokumentacja
 
 ## Cel projektu
@@ -159,3 +153,23 @@ Poza funkcjami dostępne są równie wyzwalacze wykorzystywane w bazie danych do
 Aplikacja wykorzystuje bibliotekę `streamlit` do dynamicznego przeglądania, dodawania pacjentów, wywietlania statystyk i stanów magazynów. Po połączeniu z bazą danych przy użyciu `psycopg2` wysyła proste zapytania SQL wykorzystując wcześniej opisane funkcje. Zwrócone dane są prezentowane między innymi za pomocą `plotly` w formie wykresów.
 
 Każda sekcja UI (statystyki, pacjenci, stan magazynu) została oddzielnie opakowana w odpowiednie funkcje do wyświetlania.
+
+## Testy
+
+Dodawanie pacjenta - po uzupełnieniu niezbędnych danych w formularzu, możemy dodać pacjenta.
+
+![alt text](img/dodanie.png)
+
+Dodany wcześniej pacjent jest dostępny w liście wszystkich pacjentów.
+
+![alt text](img/lista.png)
+
+Pojawiła się równie jego lokalizacja na mapie.
+
+![alt text](img/mapa.png)
+
+Plik test_tables_exist.py: testuje czy baza danych jest poprawnie tworzona, czy tabele, ograczniczenia, widoki i indeksy istnieją.
+
+Plik test_functions.py: testuje działanie dodanych funkcji.
+
+Plik test_triggers.py: testuje działanie triggerów przez pokazanie scenariusza w którym zostają wywołane.
