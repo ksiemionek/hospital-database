@@ -564,6 +564,71 @@ alter table devices
             on delete cascade;
 
 --INDEXES---------------------------------------------------------------------------------------------------------------
+create index idx_patients_id on
+   patients (
+      id
+   );
+
+create index idx_patients_ssn on
+   patients (
+      ssn
+   );
+
+create index idx_patients_last on
+   patients (
+      last
+   );
+
+create index idx_patients_first on
+   patients (
+      first
+   );
+
+create index idx_patients_lat_lon on
+   patients (
+      lat, lon
+   );
+
+create index idx_patients_gender on
+   patients (
+      gender
+   );
+
+create index idx_patients_race on
+   patients (
+      race
+   );
+
+create index idx_medications_patient_start on
+   medications (
+      patient, start desc
+   );
+
+create index idx_conditions_patient_desc_start on
+   conditions (
+      patient, description, start desc
+   );
+
+create index idx_conditions_description on
+   conditions (
+      description
+   );
+
+create index idx_encounters_patient_start on
+   encounters (
+      patient, start desc
+);
+
+create index idx_supply_summary_quantity_desc on
+   supply_summary (
+      total_quantity desc
+   );
+
+create index idx_med_summary_dispenses_desc on
+   medication_summary (
+      total_dispenses desc
+   );
+
 create index idx_payer_transitions_patient on
    payer_transitions (
       patient
@@ -573,10 +638,6 @@ create index idx_payer_transitions_payer on
       payer
    );
 
-create index idx_encounters_patient on
-   encounters (
-      patient
-   );
 create index idx_encounters_payer on
    encounters (
       payer
@@ -586,6 +647,7 @@ create index idx_procedures_encounter on
    procedures (
       encounter
    );
+
 create index idx_medications_payer on
    medications (
       payer

@@ -27,8 +27,8 @@ Dane do projektu pochodzą ze strony https://synthea.mitre.org/downloads, konkre
 Po udanym uruchomieniu bazy danych w Dockerze należy uruchomić skrypt `create_database.sh`, który pobiera plik .zip z danymi do wstawienia, a następnie tworzy bazę danych na podstawie pliku `create_schema.sql` i wstawia do niego wszystkie dane.
 
 ```sh
-chmod +x create_database.sh
-./create_database.sh
+chmod +x database/create_database.sh
+./database/create_database.sh
 ```
 
 ## Uruchomienie aplikacji
@@ -45,6 +45,14 @@ Po udanym zainstalowaniu możemy uruchomić aplikację.
 streamlit run app.py
 ```
 
+## Uruchomienie testów
+
+Po zainstalowaniu zależności
+
+```sh
+pytest ./tests
+```
+
 # Dokumentacja
 
 ## Cel projektu
@@ -57,6 +65,7 @@ Celem naszego projektu było utworzenie bazy danych umożliwiającej zarządzani
 - Michał Pędziwiatr: Aplikacja webowa, optymalizacja bazy danych oraz diagram jej struktury
 - Miłosz Andryszczuk: funkcje, procedury i triggery – walidacja danych, automatyczne aktualizacje oraz audyt operacji usuwania
 - Wojciech Zieziula: struktura i połączenia tabel, refaktoryzacja kodu aplikacji webowej, skrypt do utworzenia bazy danych
+- Michał Mizia: struktura docker compose, struktura tabel, refactoring triggerów, testy jednostkowe
 
 ## Dane techniczne
 
@@ -92,11 +101,6 @@ Celem naszego projektu było utworzenie bazy danych umożliwiającej zarządzani
 - `claims_transactions` - transakcje finansowe dotyczące ubezpieczeń
 - `payer_transitions` - historia zmian ubezpieczeń
 
-## Diagram bazy
-
-![Diagram ERD](diagram.png)
-
-
 ## Funkcjonalność
 
 Baza danych została zoptymalizowana za pomocą odpowiednich indeksów przyspieszających operowanie na danych. Wprowadziliśmy również niezbędne funkcje i procedury potrzebne do działania aplikacji:
@@ -121,8 +125,8 @@ Baza danych została zoptymalizowana za pomocą odpowiednich indeksów przyspies
 - `get_medications_summary` – zwraca 20 najczęściej przepisywanych leków
 - `get_supplies_summary` – zwraca 20 najczęściej zużywanych materiałów medycznych
 
-
 ### Triggery
+
 Poza funkcjami dostępne są równie wyzwalacze wykorzystywane w bazie danych do walidacji, automatycznych aktualizacji oraz utrzymania integralności danych:
 
 #### Audyt
@@ -143,3 +147,29 @@ Poza funkcjami dostępne są równie wyzwalacze wykorzystywane w bazie danych do
 - `trg_visit_after_insert` – aktualizuje datę ostatniej wizyty pacjenta po każdej nowej rejestracji w tabeli `encounters`
 - `trg_claim_before_insert` – ustawia domyślną datę utworzenia roszczenia, jeśli nie została podana
 - `trg_increment_patient_procedure_count` – inkrementuje licznik procedur pacjenta po dodaniu nowej procedury medycznej
+
+## Opis aplikacji
+
+Aplikacja wykorzystuje bibliotekę `streamlit` do dynamicznego przeglądania, dodawania pacjentów, wywietlania statystyk i stanów magazynów. Po połączeniu z bazą danych przy użyciu `psycopg2` wysyła proste zapytania SQL wykorzystując wcześniej opisane funkcje. Zwrócone dane są prezentowane między innymi za pomocą `plotly` w formie wykresów.
+
+Każda sekcja UI (statystyki, pacjenci, stan magazynu) została oddzielnie opakowana w odpowiednie funkcje do wyświetlania.
+
+## Testy
+
+Dodawanie pacjenta - po uzupełnieniu niezbędnych danych w formularzu, możemy dodać pacjenta.
+
+![alt text](img/dodanie.png)
+
+Dodany wcześniej pacjent jest dostępny w liście wszystkich pacjentów.
+
+![alt text](img/lista.png)
+
+Pojawiła się równie jego lokalizacja na mapie.
+
+![alt text](img/mapa.png)
+
+Plik test_tables_exist.py: testuje czy baza danych jest poprawnie tworzona, czy tabele, ograczniczenia, widoki i indeksy istnieją.
+
+Plik test_functions.py: testuje działanie dodanych funkcji.
+
+Plik test_triggers.py: testuje działanie triggerów przez pokazanie scenariusza w którym zostają wywołane.
