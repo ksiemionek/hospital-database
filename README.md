@@ -92,6 +92,10 @@ Celem naszego projektu było utworzenie bazy danych umożliwiającej zarządzani
 - `claims_transactions` - transakcje finansowe dotyczące ubezpieczeń
 - `payer_transitions` - historia zmian ubezpieczeń
 
+## Diagram bazy
+
+![Diagram ERD](diagram.png)
+
 
 ## Funkcjonalność
 
