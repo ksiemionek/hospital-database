@@ -153,3 +153,9 @@ Poza funkcjami dostępne są równie wyzwalacze wykorzystywane w bazie danych do
 - `trg_visit_after_insert` – aktualizuje datę ostatniej wizyty pacjenta po każdej nowej rejestracji w tabeli `encounters`
 - `trg_claim_before_insert` – ustawia domyślną datę utworzenia roszczenia, jeśli nie została podana
 - `trg_increment_patient_procedure_count` – inkrementuje licznik procedur pacjenta po dodaniu nowej procedury medycznej
+
+## Opis aplikacji
+
+Aplikacja wykorzystuje bibliotekę `streamlit` do dynamicznego przeglądania, dodawania pacjentów, wywietlania statystyk i stanów magazynów. Po połączeniu z bazą danych przy użyciu `psycopg2` wysyła proste zapytania SQL wykorzystując wcześniej opisane funkcje. Zwrócone dane są prezentowane między innymi za pomocą `plotly` w formie wykresów.
+
+Każda sekcja UI (statystyki, pacjenci, stan magazynu) została oddzielnie opakowana w odpowiednie funkcje do wyświetlania.
