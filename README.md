@@ -103,7 +103,7 @@ Celem naszego projektu było utworzenie bazy danych umożliwiającej zarządzani
 
 ## Diagram tabel
 
-![Diagram ERD](img/diagram1.png)
+![Diagram ERD](img/diagram2.png)
 
 ## Funkcjonalność
 
