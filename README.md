@@ -1,179 +1,181 @@
-# Bazy Danych 2 - Projekt Szpitala
+# Hospital Database
 
-Grupa: Z07
+**Authors:**
 
-- Michał Mizia
-- Kacper Siemionek
-- Michał Pędziwiatr
-- Miłosz Andryszczuk
-- Wojciech Zieziula
+  * Michał Pędziwiatr
+  * Michał Mizia
+  * Kacper Siemionek
+  * Miłosz Andryszczuk
+  * Wojciech Zieziula
 
-## Odpalenie dockera
+## Table of Contents
+
+  * [Overview](#overview)
+  * [Technical Overview](#technical-overview)
+      * [Project Goal](#project-goal)
+      * [Technology Stack](#technology-stack)
+      * [Application Features](#application-features)
+      * [Database Logic](#database-logic)
+      * [Database Diagram](#database-diagram)
+      * [Testing](#testing)
+  * [Setup Tutorial](#setup-tutorial)
+      * [Prerequisites](#prerequisites)
+      * [1. Configure Environment](#1-configure-environment)
+      * [2. Start the Database Container](#2-start-the-database-container)
+      * [3. Initialize the Database](#3-initialize-the-database)
+      * [4. Install Python Dependencies](#4-install-python-dependencies)
+      * [5. Run the Streamlit Application](#5-run-the-streamlit-application)
+  * [Dataset](#dataset)
+
+## Overview
+
+This project provides a PostgreSQL hospital database and a Streamlit web application for managing patient data, visits, medical procedures, insurance claims, and hospital resources.
+
+Originally developed as part of an academic project, this version has been refactored for portfolio use.
+
+## Technical Overview
+
+### Project Goal
+
+The primary goal was to create a comprehensive database for managing patient medical records, appointments, procedures, billing, and hospital resources.
+
+### Technology Stack
+
+  * **Database:** PostgreSQL
+  * **Application:** Python, Streamlit
+  * **Libraries:** psycopg2 (DB Connector), pandas (Data Manipulation), plotly (Visualizations)
+  * **Containerization:** Docker Compose
+
+### Application Features
+
+The Streamlit web application provides a dynamic interface built on top of the database functions. It allows users to:
+
+  * View general hospital statistics and patient demographics.
+  * Search for, add, and delete patients.
+  * View detailed patient profiles, including their diagnoses, medications, and hospital encounters.
+  * View summaries of hospital inventory, such as medication and supply levels.
+
+### Database Logic
+
+The database is optimized with appropriate indexes and includes a suite of procedures, functions, and triggers to ensure data integrity and automate tasks.
+
+#### Tables
+
+  * **Core Tables:** `patients`, `payers`, `encounters`, `providers`, `organizations`
+  * **Clinical Tables:** `conditions`, `medications`, `procedures`, `immunizations`, `allergies`, `observations`, `imaging_studies`, `careplans`, `supplies`, `devices`
+  * **Financial Tables:** `claims`, `claims_transactions`, `payer_transitions`
+
+#### Procedures
+
+  * `add_patient`: Validates and inserts a new patient into the system.
+  * `delete_patient`: Deletes a patient and their related data (with auditing).
+
+#### Functions
+
+  * **Statistics:** `get_gender_distribution`, `get_race_distribution`, `get_patient_locations`, `get_top_diagnoses`
+  * **Patient Management:** `search_patients` (by name/SSN), `get_all_patients`, `get_patient_details`
+  * **Patient Data:** `get_patient_diagnoses`, `get_patient_medications`, `get_patient_encounters`
+  * **Inventory:** `get_medications_summary`, `get_supplies_summary`
+
+#### Triggers
+
+  * **Auditing:**
+      * `trg_patients_after_delete`: Saves deleted patient records to the `patients_audit` table as JSONB.
+      * `trg_patients_audit_after_insert`: Limits the `patients_audit` table to 100 recent records.
+  * **Validation:**
+      * `trg_prevent_duplicate_immunization`: Prevents adding the same vaccine to the same patient on the same day.
+      * `trg_prevent_med_after_death`: Prevents prescribing medication to a deceased patient.
+      * `trg_validate_encounter_dates`: Ensures an encounter's end date is not before its start date.
+  * **Automatic Updates:**
+      * `trg_update_claim_total`: Recalculates the total claim amount after a transaction is modified.
+      * `trg_visit_after_insert`: Updates a patient's last visit date after a new encounter is added.
+
+### Database Diagram
+
+Below is the Entity-Relationship Diagram (ERD) for the hospital database, illustrating the tables and their relationships.
+
+![diagram2.png](img/diagram2.png)
+
+### Testing
+
+The project includes automated tests to verify database structure and logic:
+
+  * `test_tables_exist.py`: Verifies that all tables, constraints, views, and indexes are created correctly.
+  * `test_functions.py`: Tests the behavior of custom database functions.
+  * `test_triggers.py`: Tests trigger scenarios for validation and automation.
+
+## Setup Tutorial
+
+Follow the steps below to set up and run the application. All commands should be executed from the project's root directory.
+
+### Prerequisites
+
+Before you begin, ensure you have the following tools installed on your system:
+
+  * Docker and Docker Compose
+  * Python 3.8+
+  * pip (Python package manager)
+
+### 1. Configure Environment
+
+This project uses environment variables to handle database configuration securely.
+
+1.  Copy the example environment file:
+    ```sh
+    cp .env.example .env
+    ```
+2.  Open the new `.env` file. The default values are already set to work with the provided Docker setup, but you can review them.
+
+### 2. Start the Database Container
+
+With the `.env` file in place, Docker Compose will automatically use it to configure the container.
 
 ```sh
-docker compose up -d
+docker-compose -f database/docker-compose.yml up -d
 ```
 
-url=postgresql://admin:password@localhost:5432/szpital_z07
-username=admin
-password=password
+### 3. Initialize the Database
 
-## Zbiór danych
+Next, run the database initialization script. This script downloads the dataset, creates the schema, and populates the tables.
 
-Dane do projektu pochodzą ze strony https://synthea.mitre.org/downloads, konkretnie zbiór `1K Sample Synthetic Patient Records, CSV | [mirror]: 9 MB`
-
-## Utworzenie bazy danych
-
-Po udanym uruchomieniu bazy danych w Dockerze należy uruchomić skrypt `create_database.sh`, który pobiera plik .zip z danymi do wstawienia, a następnie tworzy bazę danych na podstawie pliku `create_schema.sql` i wstawia do niego wszystkie dane.
+First, make the script executable:
 
 ```sh
 chmod +x database/create_database.sh
+```
+
+Then, run the script:
+
+```sh
 ./database/create_database.sh
 ```
 
-## Uruchomienie aplikacji
+> **Note (WSL Line Endings):**
+> If you are running the script in WSL and encounter a `$'\r': command not found` error, it means the file has Windows-style line endings. You must convert it *before* running:
+>
+> ```sh
+> sed -i 's/\r$//' database/create_database.sh
+> ./database/create_database.sh
+> ```
 
-Aby uruchomić aplikację, najpierw należy zainstalować potrzebne biblioteki:
+### 4. Install Python Dependencies
 
-```sh
-pip install streamlit pandas plotly psycopg2-binary
-```
-
-Po udanym zainstalowaniu możemy uruchomić aplikację.
-
-```sh
-streamlit run app.py
-```
-
-## Uruchomienie testów
-
-Po zainstalowaniu zależności
+Install the required Python packages, including `python-dotenv` for managing the environment variables.
 
 ```sh
-pytest ./tests
+pip install streamlit pandas plotly psycopg2-binary python-dotenv
 ```
 
-# Dokumentacja
+### 5. Run the Streamlit Application
 
-## Cel projektu
+Finally, run the web application:
 
-Celem naszego projektu było utworzenie bazy danych umożliwiającej zarządzanie danymi medycznymi pacjentów, wizytami, procedurami, rozliceniami, zasobami szpitala itp.
+```sh
+streamlit run app/app.py
+```
 
-## Podział pracy
+The application should now be running in your browser at `http://localhost:8501`.
 
-- Kacper Siemionek: struktura i połączenia tabel, optymalizacja za pomocą indeksów, wizualizacja danych w aplikacji webowej, skrypt do utworzenia bazy
-- Michał Pędziwiatr: Aplikacja webowa, optymalizacja bazy danych oraz diagram jej struktury
-- Miłosz Andryszczuk: funkcje, procedury i triggery – walidacja danych, automatyczne aktualizacje oraz audyt operacji usuwania
-- Wojciech Zieziula: struktura i połączenia tabel, refaktoryzacja kodu aplikacji webowej, skrypt do utworzenia bazy danych
-- Michał Mizia: struktura docker compose, struktura tabel, refactoring triggerów, testy jednostkowe
+## Dataset
 
-## Dane techniczne
-
-- Baza danych PostgreSQL
-- Aplikacja w języku Python wykorzystująca bibliotekę Streamlit
-
-## Opis tabel
-
-### Tabele podstawowe
-
-- `patients` - dane osobiste pacjentów
-- `payers` - informacje o płatnikach
-- `encounters` - rejestracje wizyt
-- `providers` - dostawcy usług medycznych
-- `organizations` - instytucje medyczne
-
-### Tabele kliniczne
-
-- `conditions` - choroby, urazy pacjentów
-- `medications` - przepisane leki
-- `procedures` - wykonane procedury medyczne
-- `immunizations` - szczepienia pacjentów
-- `allergies` - alergie pacjentów
-- `observations` - obserwacje, wyniki badań
-- `imaging_studies` - dokumentacja badań diagnostycznych
-- `careplans` - dokumentacja planów i celów leczenia
-- `supplies` - zaopatrzenie medyczne
-- `devices` - zarejestrowane urzązdzenia
-
-### Tabele finansowe
-
-- `claims` - roszczenia ubezpieczeniowe
-- `claims_transactions` - transakcje finansowe dotyczące ubezpieczeń
-- `payer_transitions` - historia zmian ubezpieczeń
-
-## Diagram tabel
-
-![Diagram ERD](img/diagram2.png)
-
-## Funkcjonalność
-
-Baza danych została zoptymalizowana za pomocą odpowiednich indeksów przyspieszających operowanie na danych. Wprowadziliśmy również niezbędne funkcje i procedury potrzebne do działania aplikacji:
-
-### Procedury
-
-- `add_patient` – dodaje pacjenta do systemu po uprzedniej walidacji danych wejściowych
-- `delete_patient` – usuwa pacjenta oraz jego powiązane dane
-
-### Funkcje
-
-- `get_gender_distribution` – zwraca rozkład pacjentów według płci
-- `get_race_distribution` – zwraca rozkład pacjentów według rasy
-- `get_patient_locations` – zwraca współrzędne geograficzne pacjentów
-- `get_top_diagnoses` – zwraca najczęściej występujące diagnozy
-- `search_patients` – umożliwia wyszukiwanie pacjentów po imieniu, nazwisku lub numerze SSN
-- `get_all_patients` – zwraca wszystkich pacjentów
-- `get_patient_details` – zwraca szczegóły pojedynczego pacjenta
-- `get_patient_diagnoses` – zwraca ostatnie diagnozy danego pacjenta
-- `get_patient_medications` – zwraca ostatnio przepisane leki pacjenta
-- `get_patient_encounters` – zwraca ostatnie wizyty danego pacjenta w szpitalu
-- `get_medications_summary` – zwraca 20 najczęściej przepisywanych leków
-- `get_supplies_summary` – zwraca 20 najczęściej zużywanych materiałów medycznych
-
-### Triggery
-
-Poza funkcjami dostępne są równie wyzwalacze wykorzystywane w bazie danych do walidacji, automatycznych aktualizacji oraz utrzymania integralności danych:
-
-#### Audyt
-
-- `trg_patients_after_delete` – zapisuje usunięte rekordy z `patients` do `patients_audit` jako JSONB
-- `trg_patients_audit_after_insert` – ogranicza rozmiar tabeli `patients_audit` do 100 rekordów, usuwając najstarsze wpisy po każdym dodaniu
-
-#### Walidacja danych
-
-- `trg_prevent_duplicate_immunization` – uniemożliwia dodanie tej samej szczepionki dla danego pacjenta tego samego dnia
-- `trg_prevent_med_after_death` – zapobiega przypisywaniu leków pacjentowi, który już nie żyje
-- `trg_validate_encounter_dates` – wymusza, aby data zakończenia wizyty nie była wcześniejsza niż data rozpoczęcia
-- `trg_validate_observation` – sprawdza poprawność danych wstawianych do tabeli `observations`
-
-#### Automatyczne aktualizacje
-
-- `trg_update_claim_total` – przelicza łączną kwotę roszczenia po każdej modyfikacji powiązanych transakcji w `claims_transactions`
-- `trg_visit_after_insert` – aktualizuje datę ostatniej wizyty pacjenta po każdej nowej rejestracji w tabeli `encounters`
-- `trg_claim_before_insert` – ustawia domyślną datę utworzenia roszczenia, jeśli nie została podana
-- `trg_increment_patient_procedure_count` – inkrementuje licznik procedur pacjenta po dodaniu nowej procedury medycznej
-
-## Opis aplikacji
-
-Aplikacja wykorzystuje bibliotekę `streamlit` do dynamicznego przeglądania, dodawania pacjentów, wywietlania statystyk i stanów magazynów. Po połączeniu z bazą danych przy użyciu `psycopg2` wysyła proste zapytania SQL wykorzystując wcześniej opisane funkcje. Zwrócone dane są prezentowane między innymi za pomocą `plotly` w formie wykresów.
-
-Każda sekcja UI (statystyki, pacjenci, stan magazynu) została oddzielnie opakowana w odpowiednie funkcje do wyświetlania.
-
-## Testy
-
-Dodawanie pacjenta - po uzupełnieniu niezbędnych danych w formularzu, możemy dodać pacjenta.
-
-![alt text](img/dodanie.png)
-
-Dodany wcześniej pacjent jest dostępny w liście wszystkich pacjentów.
-
-![alt text](img/lista.png)
-
-Pojawiła się równie jego lokalizacja na mapie.
-
-![alt text](img/mapa.png)
-
-Plik test_tables_exist.py: testuje czy baza danych jest poprawnie tworzona, czy tabele, ograczniczenia, widoki i indeksy istnieją.
-
-Plik test_functions.py: testuje działanie dodanych funkcji.
-
-Plik test_triggers.py: testuje działanie triggerów przez pokazanie scenariusza w którym zostają wywołane.
+The database initialization script (`create_database.sh`) automatically downloads and imports the **100k Sample Synthetic Patient Records (CSV)** dataset from [Synthea](https://synthea.mitre.org/downloads).
